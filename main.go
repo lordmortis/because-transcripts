@@ -35,11 +35,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	discord, err := discord.Init(configData.DiscordConfig)
+	discordInstance, err := discord.Init(configData.DiscordConfig)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
 		os.Exit(1)
 	}
+
+	registerTranscriptSearch(searcher)
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -47,13 +49,11 @@ func main() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	err = discord.Close()
+	err = discordInstance.Close()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
 		os.Exit(1)
 	}
-
-	// Cleanly close down the Discord session.
 
 	/*	episodeResults, err := searcher.Find("😟")
 		if err != nil {

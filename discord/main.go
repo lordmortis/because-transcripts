@@ -1,28 +1,31 @@
 package discord
 
 import (
-	"BecauseLanguageBot/config"
 	"gopkg.in/errgo.v2/errors"
 	"strings"
 
+	"BecauseLanguageBot/config"
 	"github.com/bwmarrin/discordgo"
 )
 
 type Discord struct {
-	session *discordgo.Session
 }
+
+var (
+	session *discordgo.Session
+)
 
 func Init(config config.DiscordConfig) (*Discord, error) {
 	var err error
 	var context Discord
-	context.session, err = discordgo.New("Bot " + config.Token)
+	session, err = discordgo.New("Bot " + config.Token)
 	if err != nil {
 		return nil, errors.Because(err, nil, "Could not setup discord session")
 	}
 
-	context.session.AddHandler(handleMessage)
+	session.AddHandler(handleMessage)
 
-	err = context.session.Open()
+	err = session.Open()
 	if err != nil {
 		return nil, errors.Because(err, nil, "Could not setup discord session")
 	}
@@ -31,11 +34,11 @@ func Init(config config.DiscordConfig) (*Discord, error) {
 }
 
 func (context *Discord) Close() error {
-	if context.session == nil {
+	if session == nil {
 		return nil
 	}
 
-	err := context.session.Close()
+	err := session.Close()
 	if err != nil {
 		return errors.Because(nil, err, "Could not close discord session")
 	}

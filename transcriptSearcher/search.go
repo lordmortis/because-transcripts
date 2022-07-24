@@ -15,14 +15,33 @@ type EpisodeResult struct {
 }
 
 type Result struct {
-	preContext    []string
-	matchingLines []string
-	postContext   []string
+	preContext  []string
+	matching    []string
+	postContext []string
+	Pre         []Line
+	Matching    []Line
+	Post        []Line
+}
+
+type Line struct {
+	IsInterjection bool
+	Speaker        string
+	Text           string
 }
 
 type searchContext struct {
 	searchConfig *Searcher
 	regex        *regexp.Regexp
+}
+
+var (
+	spokenLineRegex *regexp.Regexp
+	annotationRegex *regexp.Regexp
+)
+
+func init() {
+	spokenLineRegex = regexp.MustCompile(`^(.*):(.*)$`)
+	annotationRegex = regexp.MustCompile(`^\[.*\]$`)
 }
 
 func (config *Searcher) Find(text string) ([]EpisodeResult, error) {
@@ -61,9 +80,9 @@ func (config *Searcher) Find(text string) ([]EpisodeResult, error) {
 
 func (config *Searcher) createEmptyResult() Result {
 	return Result{
-		preContext:    make([]string, 0, config.linesOfContext),
-		matchingLines: make([]string, 0, 1),
-		postContext:   make([]string, 0, config.linesOfContext),
+		preContext:  make([]string, 0, config.linesOfContext),
+		matching:    make([]string, 0, 1),
+		postContext: make([]string, 0, config.linesOfContext),
 	}
 }
 
@@ -82,7 +101,6 @@ func (context *searchContext) findInFile(entry os.DirEntry) []Result {
 
 	path := fmt.Sprintf("%s%c%s", config.directory, os.PathSeparator, info.Name())
 
-	fmt.Printf("Starting search in \"%s\"\n", path)
 	fileDesc, err := os.Open(path)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Could not read transcript file '%s'\n", entry.Name()))
@@ -110,11 +128,15 @@ func (context *searchContext) findInFile(entry os.DirEntry) []Result {
 		if lastResult != nil && len(lastResult.postContext) < cap(lastResult.postContext) {
 			lastResult.postContext = append(lastResult.postContext, line)
 		} else if lastResult != nil {
+			lastResult.Pre = processIntoLines(lastResult.preContext)
+			lastResult.Matching = processIntoLines(lastResult.matching)
+			lastResult.Post = processIntoLines(lastResult.postContext)
+
 			lastResult = nil
 		}
 
 		if context.regex.MatchString(line) {
-			currentResult.matchingLines = append(currentResult.matchingLines, line)
+			currentResult.matching = append(currentResult.matching, line)
 			contextLineIndex = 0
 			results = append(results, currentResult)
 			lastResult = &results[len(results)-1]
@@ -131,14 +153,40 @@ func (context *searchContext) findInFile(entry os.DirEntry) []Result {
 		contextLineIndex++
 	}
 
-	fmt.Printf("ending search in \"%s\"\n", path)
+	if lastResult != nil {
+		lastResult.Pre = processIntoLines(lastResult.preContext)
+		lastResult.Matching = processIntoLines(lastResult.matching)
+		lastResult.Post = processIntoLines(lastResult.postContext)
+	}
+
+	if len(currentResult.matching) > 0 {
+		currentResult.Pre = processIntoLines(lastResult.preContext)
+		currentResult.Matching = processIntoLines(lastResult.matching)
+		currentResult.Post = processIntoLines(lastResult.postContext)
+		results = append(results, currentResult)
+	}
+
 	return results
+}
+
+func processIntoLines(lineStrings []string) []Line {
+	lines := make([]Line, len(lineStrings))
+	for index, lineString := range lineStrings {
+		matches := spokenLineRegex.FindAllStringSubmatch(lineString, -1)
+		if len(matches) == 0 {
+			lines[index].Text = lineString
+			continue
+		}
+		lines[index].Speaker = matches[0][1]
+		lines[index].Text = matches[0][2]
+	}
+	return lines
 }
 
 func (result Result) String() string {
 	stringVal := strings.Join(result.preContext, "\n")
 	stringVal += "\n"
-	stringVal += strings.Join(result.matchingLines, "\n")
+	stringVal += strings.Join(result.matching, "\n")
 	stringVal += "\n"
 	stringVal += strings.Join(result.postContext, "\n")
 	return stringVal
