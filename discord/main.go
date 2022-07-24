@@ -3,6 +3,7 @@ package discord
 import (
 	"BecauseLanguageBot/config"
 	"gopkg.in/errgo.v2/errors"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -18,6 +19,8 @@ func Init(config config.DiscordConfig) (*Discord, error) {
 	if err != nil {
 		return nil, errors.Because(err, nil, "Could not setup discord session")
 	}
+
+	context.session.AddHandler(handleMessage)
 
 	err = context.session.Open()
 	if err != nil {
@@ -38,4 +41,28 @@ func (context *Discord) Close() error {
 	}
 
 	return nil
+}
+
+func discordGetCommand(user *discordgo.User, message *discordgo.MessageCreate) (string, bool) {
+	var searchprefixes []string = make([]string, 3)
+	var command string
+	commandFound := false
+
+	searchprefixes[0] = "<@" + user.ID + ">"
+	searchprefixes[1] = "@" + user.Username
+	searchprefixes[2] = user.Username
+
+	for _, prefix := range searchprefixes {
+		if strings.HasPrefix(message.Content, prefix) {
+			command = strings.TrimPrefix(message.Content, prefix)
+			commandFound = true
+			break
+		}
+	}
+
+	if commandFound {
+		command = strings.Trim(command, " ")
+	}
+
+	return command, commandFound
 }
