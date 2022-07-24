@@ -10,9 +10,14 @@ type DiscordConfig struct {
 	Token    string
 }
 
+type TranscriptConfig struct {
+	Directory            string
+	IncludedContextLines int `mapstructure:"included_context_lines"`
+}
+
 type Config struct {
-	DiscordConfig DiscordConfig `mapstructure:"discord"`
-	TranscriptDir string        `mapstructure:"transcript_directory"`
+	DiscordConfig    DiscordConfig    `mapstructure:"discord"`
+	TranscriptConfig TranscriptConfig `mapstructure:"transcripts"`
 }
 
 func Load(filename *string) (*Config, error) {
