@@ -1,0 +1,5 @@
+*.exe
+*.yaml
+!*.sample.yaml
+bin/
+tmp/

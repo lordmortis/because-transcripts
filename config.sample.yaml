@@ -1,0 +1,4 @@
+discord:
+  client_id: "DISCORD_CLIENT_ID"
+  token: "DISCORD_TOKEN_HERE"
+transcript_directory: "tmp"
