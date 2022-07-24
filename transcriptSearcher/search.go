@@ -24,9 +24,9 @@ type Result struct {
 }
 
 type Line struct {
-	IsInterjection bool
-	Speaker        string
-	Text           string
+	IsParalinguistic bool
+	Speaker          string
+	Text             string
 }
 
 type searchContext struct {
@@ -35,13 +35,13 @@ type searchContext struct {
 }
 
 var (
-	spokenLineRegex *regexp.Regexp
-	annotationRegex *regexp.Regexp
+	spokenLineRegex     *regexp.Regexp
+	paralinguisticRegex *regexp.Regexp
 )
 
 func init() {
-	spokenLineRegex = regexp.MustCompile(`^(.*):(.*)$`)
-	annotationRegex = regexp.MustCompile(`^\[.*\]$`)
+	spokenLineRegex = regexp.MustCompile(`^((\w*):)(.*)$`)
+	paralinguisticRegex = regexp.MustCompile(`^\[.*\]$`)
 }
 
 func (config *Searcher) Find(text string) ([]EpisodeResult, error) {
@@ -174,11 +174,12 @@ func processIntoLines(lineStrings []string) []Line {
 	for index, lineString := range lineStrings {
 		matches := spokenLineRegex.FindAllStringSubmatch(lineString, -1)
 		if len(matches) == 0 {
-			lines[index].Text = lineString
+			lines[index].Text = strings.TrimSpace(lineString)
+			lines[index].IsParalinguistic = paralinguisticRegex.MatchString(lines[index].Text)
 			continue
 		}
-		lines[index].Speaker = matches[0][1]
-		lines[index].Text = matches[0][2]
+		lines[index].Speaker = matches[0][2]
+		lines[index].Text = strings.TrimSpace(matches[0][3])
 	}
 	return lines
 }

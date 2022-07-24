@@ -5,11 +5,21 @@ import (
 	"BecauseLanguageBot/transcriptSearcher"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"strings"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"regexp"
 )
 
 func registerTranscriptSearch(searcher *transcriptSearcher.Searcher) {
 	discord.RegisterCommand("searchTranscripts", "Search transcripts for a given word or phrase", handleTranscriptSearch(searcher))
+}
+
+var (
+	paralinguisticRegex *regexp.Regexp
+)
+
+func init() {
+	paralinguisticRegex = regexp.MustCompile(`\[.*\]`)
 }
 
 func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Command {
@@ -54,10 +64,13 @@ func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Comma
 		sendTranscriptLine := func(line transcriptSearcher.Line) {
 			msg := ""
 			if len(line.Speaker) > 0 {
-				msg = fmt.Sprintf("**%s**: `%s`", strings.ToTitle(line.Speaker), line.Text)
-			} else {
+				msg = fmt.Sprintf("**%s**: %s", cases.Title(language.English).String(line.Speaker), handleTextLine(line.Text))
+			} else if line.IsParalinguistic {
 				msg = fmt.Sprintf("_%s_", line.Text)
+			} else {
+				msg = handleTextLine(line.Text)
 			}
+
 			session.ChannelMessageSend(channel.ID, msg)
 		}
 
@@ -83,4 +96,14 @@ func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Comma
 			}
 		}
 	}
+}
+
+func handleTextLine(text string) string {
+	matches := paralinguisticRegex.FindAllStringIndex(text, -1)
+
+	for _, match := range matches {
+		text = text[:match[0]] + "_" + text[match[0]:match[1]] + "_" + text[match[1]:]
+	}
+
+	return text
 }
