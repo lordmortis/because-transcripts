@@ -1,11 +1,14 @@
 package main
 
 import (
+	"BecauseLanguageBot/discord"
 	"BecauseLanguageBot/transcriptSearcher"
 	"flag"
 	"fmt"
 	"os"
+	"os/signal"
 	"runtime"
+	"syscall"
 
 	"BecauseLanguageBot/config"
 )
@@ -32,24 +35,44 @@ func main() {
 		os.Exit(1)
 	}
 
-	episodeResults, err := searcher.Find("Caffeinated")
+	discord, err := discord.Init(configData.DiscordConfig)
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Search Error: %s\n", err))
+		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
+		os.Exit(1)
 	}
 
-	totalResults := 0
-	for _, episodeResult := range episodeResults {
-		totalResults += len(episodeResult.Results)
+	// Wait here until CTRL-C or other term signal is received.
+	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
+	fmt.Println("To add this bot to your server, visit https://discordapp.com/oauth2/authorize?scope=bot&permissions=o&client_id=" + configData.DiscordConfig.ClientID)
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	<-sc
+	err = discord.Close()
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
+		os.Exit(1)
 	}
 
-	if totalResults > 0 {
-		fmt.Printf("%d Results\n", totalResults)
-	}
+	// Cleanly close down the Discord session.
 
-	for _, episodeResult := range episodeResults {
-		fmt.Printf("Episode: %s:\n", episodeResult.Name)
-		for _, result := range episodeResult.Results {
-			fmt.Printf("\t Result:\n%s\n", result)
+	/*	episodeResults, err := searcher.Find("😟")
+		if err != nil {
+			os.Stderr.WriteString(fmt.Sprintf("Search Error: %s\n", err))
 		}
-	}
+
+		totalResults := 0
+		for _, episodeResult := range episodeResults {
+			totalResults += len(episodeResult.Results)
+		}
+
+		if totalResults > 0 {
+			fmt.Printf("%d Results\n", totalResults)
+		}
+
+		for _, episodeResult := range episodeResults {
+			fmt.Printf("Episode: %s:\n", episodeResult.Name)
+			for _, result := range episodeResult.Results {
+				fmt.Printf("\t Result:\n%s\n", result)
+			}
+		}*/
 }

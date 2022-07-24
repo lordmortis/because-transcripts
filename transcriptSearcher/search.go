@@ -20,15 +20,6 @@ type Result struct {
 	postContext   []string
 }
 
-func (result Result) String() string {
-	stringVal := strings.Join(result.preContext, "\n")
-	stringVal += "\n"
-	stringVal += strings.Join(result.matchingLines, "\n")
-	stringVal += "\n"
-	stringVal += strings.Join(result.postContext, "\n")
-	return stringVal
-}
-
 type searchContext struct {
 	searchConfig *Searcher
 	regex        *regexp.Regexp
@@ -142,4 +133,13 @@ func (context *searchContext) findInFile(entry os.DirEntry) []Result {
 
 	fmt.Printf("ending search in \"%s\"\n", path)
 	return results
+}
+
+func (result Result) String() string {
+	stringVal := strings.Join(result.preContext, "\n")
+	stringVal += "\n"
+	stringVal += strings.Join(result.matchingLines, "\n")
+	stringVal += "\n"
+	stringVal += strings.Join(result.postContext, "\n")
+	return stringVal
 }
