@@ -78,7 +78,8 @@ func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Comma
 			msg := fmt.Sprintf("Episode: _%s_:", episodeResult.Name)
 			session.ChannelMessageSend(channel.ID, msg)
 
-			for _, result := range episodeResult.Results {
+			for index, result := range episodeResult.Results {
+				session.ChannelMessageSend(channel.ID, fmt.Sprintf("Result %d", index+1))
 				for _, prefix := range result.Pre {
 					sendTranscriptLine(prefix)
 				}

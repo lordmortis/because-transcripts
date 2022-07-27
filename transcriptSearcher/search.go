@@ -141,7 +141,12 @@ func (context *searchContext) findInFile(entry os.DirEntry) []Result {
 			results = append(results, currentResult)
 			lastResult = &results[len(results)-1]
 			currentResult = config.createEmptyResult()
+			continue
 		} else {
+			if config.linesOfContext == 0 {
+				continue
+			}
+
 			if contextLineIndex < config.linesOfContext {
 				currentResult.preContext = append(currentResult.preContext, line)
 			} else {
