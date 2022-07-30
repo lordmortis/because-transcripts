@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/gin-gonic/gin v1.8.1
+	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/kevinburke/go-bindata v3.23.0+incompatible
 	github.com/spf13/viper v1.12.0
