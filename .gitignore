@@ -3,3 +3,4 @@
 !*.sample.yaml
 bin/
 tmp/
+/httpServer/templateData

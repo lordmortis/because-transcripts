@@ -1,7 +1,7 @@
 package main
 
 import (
-	"BecauseLanguageBot/discord"
+	"BecauseLanguageBot/httpServer"
 	"BecauseLanguageBot/transcriptSearcher"
 	"flag"
 	"fmt"
@@ -35,14 +35,23 @@ func main() {
 		os.Exit(1)
 	}
 
-	discordInstance, err := discord.Init(configData.DiscordConfig)
+	/*	discordInstance, err := discord.Init(configData.DiscordConfig)
+		if err != nil {
+			os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
+			os.Exit(1)
+		}*/
+
+	httpInstance, err := httpServer.Init(configData.HttpConfig)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
 		os.Exit(1)
 	}
 
+	httpInstance.SetDevelopmentMode(configData.DevelopmentMode)
+
 	registerTranscriptSearch(searcher)
 	registerInfo()
+	httpInstance.Start()
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -50,30 +59,15 @@ func main() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	err = discordInstance.Close()
+	/*	err = discordInstance.Close()
+		if err != nil {
+			os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
+			os.Exit(1)
+		}*/
+
+	err = httpInstance.Stop()
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
+		os.Stderr.WriteString(fmt.Sprintf("Unable to shutdown HTTP server cleanly: %s\n", err))
 		os.Exit(1)
 	}
-
-	/*	episodeResults, err := searcher.Find("😟")
-		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("Search Error: %s\n", err))
-		}
-
-		totalResults := 0
-		for _, episodeResult := range episodeResults {
-			totalResults += len(episodeResult.Results)
-		}
-
-		if totalResults > 0 {
-			fmt.Printf("%d Results\n", totalResults)
-		}
-
-		for _, episodeResult := range episodeResults {
-			fmt.Printf("Episode: %s:\n", episodeResult.Name)
-			for _, result := range episodeResult.Results {
-				fmt.Printf("\t Result:\n%s\n", result)
-			}
-		}*/
 }

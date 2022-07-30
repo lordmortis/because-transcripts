@@ -15,14 +15,21 @@ type TranscriptConfig struct {
 	IncludedContextLines int `mapstructure:"included_context_lines"`
 }
 
+type HttpConfig struct {
+	BindAddress string `mapstructure:"bind_address"`
+	Port        int
+}
+
 type Config struct {
 	DiscordConfig    DiscordConfig    `mapstructure:"discord"`
 	TranscriptConfig TranscriptConfig `mapstructure:"transcripts"`
+	HttpConfig       HttpConfig       `mapstructure:"http"`
+	DevelopmentMode  bool             `mapstructure:"development"`
 }
 
 func Load(filename *string) (*Config, error) {
 	if filename != nil && len(*filename) > 0 {
-
+		viper.SetConfigFile(*filename)
 	} else {
 		//TODO: make this work on windows too.
 		viper.AddConfigPath("./")

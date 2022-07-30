@@ -4,3 +4,7 @@ discord:
 transcripts:
   directory: "tmp"
   included_context_lines: 2
+http:
+  bind_address: 0.0.0.0
+  port: 3000
+development: false
