@@ -74,6 +74,7 @@ func loadBinTemplates() (*template.Template, error) {
 
 func (server *HttpServer) Start() {
 	server.defaultRouter.GET("/", handleIndex)
+	server.defaultRouter.GET("/search", handleSearch)
 
 	server.httpServer = &http.Server{
 		Addr:    server.bindAddress,
