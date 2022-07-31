@@ -1,23 +1,20 @@
 package httpServer
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-
-	"github.com/gin-gonic/gin"
-	"gopkg.in/errgo.v2/errors"
-
 	"BecauseLanguageBot/datasource"
+	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func handleIndex(ctx *gin.Context) {
-	episodes, _, err := datasource.EpisodesAll(ctx, 100, 0)
-	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Unable to read episodes: %s", err))
-		ctx.AbortWithError(http.StatusInternalServerError, errors.New("unable to read episodes"))
-		return
-	}
+	/*	episodes, _, err := datasource.EpisodesAll(100, 0)
+		if err != nil {
+			os.Stderr.WriteString(fmt.Sprintf("Unable to read episodes: %s", err))
+			ctx.AbortWithError(http.StatusInternalServerError, errors.New("unable to read episodes"))
+			return
+		}*/
+
+	episodes := make([]datasource.Episode, 0)
 
 	templateEpisodes := make([]gin.H, len(episodes))
 	for index, episode := range episodes {

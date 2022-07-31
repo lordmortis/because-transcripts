@@ -31,9 +31,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	err = datasource.PerformMigrations(configData.DatabaseConfig, configData.DevelopmentMode)
+	_, err = datasource.Init(configData.DatabaseConfig, configData.DevelopmentMode)
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Migration error: %s\n", err))
+		os.Stderr.WriteString(fmt.Sprintf("database init error: %s\n", err))
 		os.Exit(1)
 	}
 

@@ -2,23 +2,19 @@ package datasource
 
 import (
 	"BecauseLanguageBot/datasource/migrationData"
-	"fmt"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 
-	"BecauseLanguageBot/config"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
-func PerformMigrations(config config.DatabaseConfig, development bool) error {
-	var connString = fmt.Sprintf("sqlite3://%s", config.Path)
-
+func (source *DataSource) migrate(development bool) error {
 	var m *migrate.Migrate
 	var err error
 
 	if development {
-		m, err = migrate.New("file://datasource/migrations", connString)
+		m, err = migrate.New("file://datasource/migrations", source.connectionString)
 	} else {
 		s := bindata.Resource(migrationData.AssetNames(),
 			func(name string) ([]byte, error) {
@@ -28,7 +24,7 @@ func PerformMigrations(config config.DatabaseConfig, development bool) error {
 		if err != nil {
 			return err
 		}
-		m, err = migrate.NewWithSourceInstance("go-bindata", d, connString)
+		m, err = migrate.NewWithSourceInstance("go-bindata", d, source.connectionString)
 	}
 
 	if err != nil {

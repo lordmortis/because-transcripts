@@ -1,0 +1,6 @@
+sqlite3:
+  dbname: tmp/development.db
+  blacklist:
+    - schema_migrations
+  pkgname: datasource_raw
+  output: datasource_raw
