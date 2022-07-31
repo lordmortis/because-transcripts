@@ -14,7 +14,9 @@ CREATE TABLE "utterances" (
     id BLOB NOT NULL PRIMARY KEY,
     speaker_id BLOB NOT NULL,
     episode_id BLOB NOT NULL,
-    start_time INTEGER NOT NULL
+    start_time INTEGER NOT NULL,
+    end_time INTEGER NOT NULL,
+    utterance TEXT
 );
 
 CREATE INDEX utterances_by_episode ON utterances(episode_id);

@@ -41,11 +41,27 @@ func (x *UpdateBindata) Execute(args []string) error {
 	}
 
 	templatesBinDirectory := filepath.Join(x.Directory, "httpServer", "templateData")
-	stat, err = os.Stat(templatesDirectory)
+	stat, err = os.Stat(templatesBinDirectory)
 	if err != nil {
-		return errors.New(fmt.Sprintf("templates bin directory '%s' doesn't exist", templatesBinDirectory))
+		os.MkdirAll(templatesBinDirectory, 0700)
 	} else if !stat.IsDir() {
 		return errors.New(fmt.Sprintf("templates bin directory '%s' isn't a directory", templatesBinDirectory))
+	}
+
+	migrationsDirectory := filepath.Join(x.Directory, "datasource", "migrations")
+	stat, err = os.Stat(migrationsDirectory)
+	if err != nil {
+		return errors.New(fmt.Sprintf("migrations directory '%s' doesn't exist", migrationsDirectory))
+	} else if !stat.IsDir() {
+		return errors.New(fmt.Sprintf("migrations directory '%s' isn't a directory", migrationsDirectory))
+	}
+
+	migrationsBinDirectory := filepath.Join(x.Directory, "datasource", "migrationData")
+	stat, err = os.Stat(migrationsBinDirectory)
+	if err != nil {
+		os.MkdirAll(migrationsBinDirectory, 0700)
+	} else if stat.IsDir() {
+		return errors.New(fmt.Sprintf("migrations bin directory '%s' isn't a directory", migrationsBinDirectory))
 	}
 
 	config := bindata.Config{
@@ -56,9 +72,20 @@ func (x *UpdateBindata) Execute(args []string) error {
 	}
 
 	err = bindata.Translate(&config)
-
 	if err != nil {
 		return errors.Because(err, nil, "Unable to create template bindata")
+	}
+
+	config = bindata.Config{
+		Package: "migrationData",
+		Input:   []bindata.InputConfig{bindata.InputConfig{Path: migrationsDirectory, Recursive: true}},
+		Output:  filepath.Join(migrationsBinDirectory, "main.go"),
+		Prefix:  migrationsDirectory,
+	}
+
+	err = bindata.Translate(&config)
+	if err != nil {
+		return errors.Because(err, nil, "Unable to create migrations bindata")
 	}
 
 	return nil
