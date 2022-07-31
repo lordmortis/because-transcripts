@@ -1,7 +1,9 @@
 package datasource
 
 import (
+	"BecauseLanguageBot/datasource/migrationData"
 	"fmt"
+	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 
 	"BecauseLanguageBot/config"
 	"github.com/golang-migrate/migrate/v4"
@@ -18,15 +20,15 @@ func PerformMigrations(config config.DatabaseConfig, development bool) error {
 	if development {
 		m, err = migrate.New("file://datasource/migrations", connString)
 	} else {
-		/*		s := bindata.Resource(migrationData.AssetNames(),
-					func(name string) ([]byte, error) {
-						return migrationData.Asset(name)
-					})
-				d, err := bindata.WithInstance(s)
-				if err != nil {
-					return err
-				}
-				m, err = migrate.NewWithSourceInstance("go-bindata", d, connString)*/
+		s := bindata.Resource(migrationData.AssetNames(),
+			func(name string) ([]byte, error) {
+				return migrationData.Asset(name)
+			})
+		d, err := bindata.WithInstance(s)
+		if err != nil {
+			return err
+		}
+		m, err = migrate.NewWithSourceInstance("go-bindata", d, connString)
 	}
 
 	if err != nil {
