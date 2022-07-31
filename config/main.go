@@ -10,6 +10,10 @@ type DiscordConfig struct {
 	Token    string
 }
 
+type DatabaseConfig struct {
+	Path string
+}
+
 type TranscriptConfig struct {
 	Directory            string
 	IncludedContextLines int `mapstructure:"included_context_lines"`
@@ -22,6 +26,7 @@ type HttpConfig struct {
 
 type Config struct {
 	DiscordConfig    DiscordConfig    `mapstructure:"discord"`
+	DatabaseConfig   DatabaseConfig   `mapstructure:"database"`
 	TranscriptConfig TranscriptConfig `mapstructure:"transcripts"`
 	HttpConfig       HttpConfig       `mapstructure:"http"`
 	DevelopmentMode  bool             `mapstructure:"development"`

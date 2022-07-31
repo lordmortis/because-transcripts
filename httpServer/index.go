@@ -1,12 +1,14 @@
 package httpServer
 
 import (
-	"BecauseLanguageBot/datasource"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gopkg.in/errgo.v2/errors"
 	"net/http"
 	"os"
+
+	"github.com/gin-gonic/gin"
+	"gopkg.in/errgo.v2/errors"
+
+	"BecauseLanguageBot/datasource"
 )
 
 func handleIndex(ctx *gin.Context) {

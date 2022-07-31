@@ -1,14 +1,15 @@
 package httpServer
 
 import (
-	"BecauseLanguageBot/config"
-	"BecauseLanguageBot/httpServer/templateData"
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/errgo.v2/errors"
 	"html/template"
 	"net/http"
 	"os"
+
+	"BecauseLanguageBot/config"
+	"BecauseLanguageBot/httpServer/templateData"
 )
 
 type HttpServer struct {

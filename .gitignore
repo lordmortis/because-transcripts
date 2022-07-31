@@ -4,3 +4,4 @@
 bin/
 tmp/
 /httpServer/templateData
+/datasource/migrationsData

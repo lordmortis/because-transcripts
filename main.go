@@ -1,6 +1,7 @@
 package main
 
 import (
+	"BecauseLanguageBot/datasource"
 	"BecauseLanguageBot/httpServer"
 	"BecauseLanguageBot/transcriptSearcher"
 	"flag"
@@ -26,6 +27,12 @@ func main() {
 
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to parse config file because: %s\n", err))
+		os.Exit(1)
+	}
+
+	err = datasource.PerformMigrations(configData.DatabaseConfig, configData.DevelopmentMode)
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Migration error: %s\n", err))
 		os.Exit(1)
 	}
 
