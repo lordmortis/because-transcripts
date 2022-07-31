@@ -1,11 +1,12 @@
 package transcriptSearcher
 
 import (
-	"BecauseLanguageBot/config"
 	"fmt"
 	"os"
 
 	"gopkg.in/errgo.v2/errors"
+
+	"BecauseLanguageBot/config"
 )
 
 type Searcher struct {

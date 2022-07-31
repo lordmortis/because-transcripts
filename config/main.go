@@ -19,6 +19,11 @@ type TranscriptConfig struct {
 	IncludedContextLines int `mapstructure:"included_context_lines"`
 }
 
+type ImporterConfig struct {
+	Directory string
+	WaitTime  int `mapstructure:"wait_time"`
+}
+
 type HttpConfig struct {
 	BindAddress string `mapstructure:"bind_address"`
 	Port        int
@@ -27,6 +32,7 @@ type HttpConfig struct {
 type Config struct {
 	DiscordConfig    DiscordConfig    `mapstructure:"discord"`
 	DatabaseConfig   DatabaseConfig   `mapstructure:"database"`
+	ImporterConfig   ImporterConfig   `mapstructure:"importer"`
 	TranscriptConfig TranscriptConfig `mapstructure:"transcripts"`
 	HttpConfig       HttpConfig       `mapstructure:"http"`
 	DevelopmentMode  bool             `mapstructure:"development"`

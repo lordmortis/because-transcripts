@@ -3,6 +3,7 @@ package main
 import (
 	"BecauseLanguageBot/datasource"
 	"BecauseLanguageBot/httpServer"
+	"BecauseLanguageBot/transcriptImporter"
 	"BecauseLanguageBot/transcriptSearcher"
 	"flag"
 	"fmt"
@@ -36,9 +37,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	searcher, err = transcriptSearcher.Init(configData.TranscriptConfig)
+	importer, err := transcriptImporter.Init(configData.ImporterConfig)
 	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Transcription directory error: %s\n", err))
+		os.Stderr.WriteString(fmt.Sprintf("Could not setup importer: %s\n", err))
+		os.Exit(1)
+	}
+
+	httpInstance, err := httpServer.Init(configData.HttpConfig)
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
+		os.Exit(1)
+	}
+
+	httpInstance.SetDevelopmentMode(configData.DevelopmentMode)
+	httpInstance.Start()
+
+	err = importer.Start()
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Could not start importer: %s\n", err))
 		os.Exit(1)
 	}
 
@@ -48,17 +64,8 @@ func main() {
 			os.Exit(1)
 		}*/
 
-	httpInstance, err := httpServer.Init(configData.HttpConfig)
-	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
-		os.Exit(1)
-	}
-
-	httpInstance.SetDevelopmentMode(configData.DevelopmentMode)
-
 	registerTranscriptSearch(searcher)
 	registerInfo()
-	httpInstance.Start()
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -75,6 +82,12 @@ func main() {
 	err = httpInstance.Stop()
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to shutdown HTTP server cleanly: %s\n", err))
+		os.Exit(1)
+	}
+
+	err = importer.Stop()
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Unable to shutdown importer server cleanly: %s\n", err))
 		os.Exit(1)
 	}
 }
