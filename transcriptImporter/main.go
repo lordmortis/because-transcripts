@@ -1,6 +1,7 @@
 package transcriptImporter
 
 import (
+	"BecauseLanguageBot/datasource"
 	"fmt"
 	"os"
 	"time"
@@ -16,9 +17,10 @@ type Importer struct {
 	waitTime       time.Duration
 	watcher        *fsnotify.Watcher
 	watchedEntries map[string]fileInfo
+	datasource     *datasource.DataSource
 }
 
-func Init(config config.ImporterConfig) (*Importer, error) {
+func Init(config config.ImporterConfig, dataSource *datasource.DataSource) (*Importer, error) {
 	if len(config.Directory) == 0 {
 		return nil, errors.New("Transcript directory not specified")
 	}
@@ -41,6 +43,7 @@ func Init(config config.ImporterConfig) (*Importer, error) {
 		directory:      config.Directory,
 		waitTime:       time.Second * time.Duration(config.WaitTime),
 		watchedEntries: make(map[string]fileInfo),
+		datasource:     dataSource,
 	}, nil
 }
 

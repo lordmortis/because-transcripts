@@ -26,8 +26,8 @@ import (
 type Speaker struct {
 	ID        []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name      null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
-	CreatedAt int64       `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt int64       `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *speakerR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L speakerL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -62,13 +62,13 @@ var SpeakerTableColumns = struct {
 var SpeakerWhere = struct {
 	ID        whereHelper__byte
 	Name      whereHelpernull_String
-	CreatedAt whereHelperint64
-	UpdatedAt whereHelperint64
+	CreatedAt whereHelpertime_Time
+	UpdatedAt whereHelpertime_Time
 }{
 	ID:        whereHelper__byte{field: "\"speaker\".\"id\""},
 	Name:      whereHelpernull_String{field: "\"speaker\".\"name\""},
-	CreatedAt: whereHelperint64{field: "\"speaker\".\"created_at\""},
-	UpdatedAt: whereHelperint64{field: "\"speaker\".\"updated_at\""},
+	CreatedAt: whereHelpertime_Time{field: "\"speaker\".\"created_at\""},
+	UpdatedAt: whereHelpertime_Time{field: "\"speaker\".\"updated_at\""},
 }
 
 // SpeakerRels is where relationship names are stored.
@@ -617,11 +617,11 @@ func (o *Speaker) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
-		if queries.MustTime(o.UpdatedAt).IsZero() {
-			queries.SetScanner(&o.UpdatedAt, currTime)
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
 		}
 	}
 
@@ -702,7 +702,7 @@ func (o *Speaker) Update(ctx context.Context, exec boil.ContextExecutor, columns
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		queries.SetScanner(&o.UpdatedAt, currTime)
+		o.UpdatedAt = currTime
 	}
 
 	var err error
@@ -838,10 +838,10 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
-		queries.SetScanner(&o.UpdatedAt, currTime)
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {

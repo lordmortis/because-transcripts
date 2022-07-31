@@ -28,7 +28,7 @@ type Episode struct {
 	PodcastID   []byte      `boil:"podcast_id" json:"podcast_id" toml:"podcast_id" yaml:"podcast_id"`
 	Number      null.Int64  `boil:"number" json:"number,omitempty" toml:"number" yaml:"number,omitempty"`
 	Name        null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
-	AiredAt     int64       `boil:"aired_at" json:"aired_at" toml:"aired_at" yaml:"aired_at"`
+	AiredAt     time.Time   `boil:"aired_at" json:"aired_at" toml:"aired_at" yaml:"aired_at"`
 	PatreonOnly null.Int64  `boil:"patreon_only" json:"patreon_only,omitempty" toml:"patreon_only" yaml:"patreon_only,omitempty"`
 
 	R *episodeR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -126,27 +126,25 @@ func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
 func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
 func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
-type whereHelperint64 struct{ field string }
+type whereHelpertime_Time struct{ field string }
 
-func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.EQ, x)
 }
-func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.NEQ, x)
+}
+func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
 var EpisodeWhere = struct {
@@ -154,14 +152,14 @@ var EpisodeWhere = struct {
 	PodcastID   whereHelper__byte
 	Number      whereHelpernull_Int64
 	Name        whereHelpernull_String
-	AiredAt     whereHelperint64
+	AiredAt     whereHelpertime_Time
 	PatreonOnly whereHelpernull_Int64
 }{
 	ID:          whereHelper__byte{field: "\"episodes\".\"id\""},
 	PodcastID:   whereHelper__byte{field: "\"episodes\".\"podcast_id\""},
 	Number:      whereHelpernull_Int64{field: "\"episodes\".\"number\""},
 	Name:        whereHelpernull_String{field: "\"episodes\".\"name\""},
-	AiredAt:     whereHelperint64{field: "\"episodes\".\"aired_at\""},
+	AiredAt:     whereHelpertime_Time{field: "\"episodes\".\"aired_at\""},
 	PatreonOnly: whereHelpernull_Int64{field: "\"episodes\".\"patreon_only\""},
 }
 

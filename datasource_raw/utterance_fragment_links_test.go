@@ -781,7 +781,7 @@ func testUtteranceFragmentLinksSelect(t *testing.T) {
 }
 
 var (
-	utteranceFragmentLinkDBTypes = map[string]string{`UtteranceID`: `BLOB`, `SequenceNo`: `INTEGER`, `UtteranceFragmentID`: `BLOB`, `CreatedAt`: `INTEGER`, `UpdatedAt`: `INTEGER`}
+	utteranceFragmentLinkDBTypes = map[string]string{`UtteranceID`: `BLOB`, `SequenceNo`: `INTEGER`, `UtteranceFragmentID`: `BLOB`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_                            = bytes.MinRead
 )
 

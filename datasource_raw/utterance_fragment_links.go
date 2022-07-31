@@ -23,11 +23,11 @@ import (
 
 // UtteranceFragmentLink is an object representing the database table.
 type UtteranceFragmentLink struct {
-	UtteranceID         []byte `boil:"utterance_id" json:"utterance_id" toml:"utterance_id" yaml:"utterance_id"`
-	SequenceNo          int64  `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
-	UtteranceFragmentID []byte `boil:"utterance_fragment_id" json:"utterance_fragment_id" toml:"utterance_fragment_id" yaml:"utterance_fragment_id"`
-	CreatedAt           int64  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt           int64  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	UtteranceID         []byte    `boil:"utterance_id" json:"utterance_id" toml:"utterance_id" yaml:"utterance_id"`
+	SequenceNo          int64     `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
+	UtteranceFragmentID []byte    `boil:"utterance_fragment_id" json:"utterance_fragment_id" toml:"utterance_fragment_id" yaml:"utterance_fragment_id"`
+	CreatedAt           time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt           time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *utteranceFragmentLinkR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L utteranceFragmentLinkL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -63,18 +63,41 @@ var UtteranceFragmentLinkTableColumns = struct {
 
 // Generated where
 
+type whereHelperint64 struct{ field string }
+
+func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
 var UtteranceFragmentLinkWhere = struct {
 	UtteranceID         whereHelper__byte
 	SequenceNo          whereHelperint64
 	UtteranceFragmentID whereHelper__byte
-	CreatedAt           whereHelperint64
-	UpdatedAt           whereHelperint64
+	CreatedAt           whereHelpertime_Time
+	UpdatedAt           whereHelpertime_Time
 }{
 	UtteranceID:         whereHelper__byte{field: "\"utterance_fragment_links\".\"utterance_id\""},
 	SequenceNo:          whereHelperint64{field: "\"utterance_fragment_links\".\"sequence_no\""},
 	UtteranceFragmentID: whereHelper__byte{field: "\"utterance_fragment_links\".\"utterance_fragment_id\""},
-	CreatedAt:           whereHelperint64{field: "\"utterance_fragment_links\".\"created_at\""},
-	UpdatedAt:           whereHelperint64{field: "\"utterance_fragment_links\".\"updated_at\""},
+	CreatedAt:           whereHelpertime_Time{field: "\"utterance_fragment_links\".\"created_at\""},
+	UpdatedAt:           whereHelpertime_Time{field: "\"utterance_fragment_links\".\"updated_at\""},
 }
 
 // UtteranceFragmentLinkRels is where relationship names are stored.
@@ -816,11 +839,11 @@ func (o *UtteranceFragmentLink) Insert(ctx context.Context, exec boil.ContextExe
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
-		if queries.MustTime(o.UpdatedAt).IsZero() {
-			queries.SetScanner(&o.UpdatedAt, currTime)
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
 		}
 	}
 
@@ -901,7 +924,7 @@ func (o *UtteranceFragmentLink) Update(ctx context.Context, exec boil.ContextExe
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		queries.SetScanner(&o.UpdatedAt, currTime)
+		o.UpdatedAt = currTime
 	}
 
 	var err error
@@ -1037,10 +1060,10 @@ func (o *UtteranceFragmentLink) Upsert(ctx context.Context, exec boil.ContextExe
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
 
-		if queries.MustTime(o.CreatedAt).IsZero() {
-			queries.SetScanner(&o.CreatedAt, currTime)
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
 		}
-		queries.SetScanner(&o.UpdatedAt, currTime)
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {

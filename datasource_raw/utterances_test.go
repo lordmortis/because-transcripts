@@ -937,7 +937,7 @@ func testUtterancesSelect(t *testing.T) {
 }
 
 var (
-	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `SpeakerID`: `BLOB`, `EpisodeID`: `BLOB`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `INTEGER`, `UpdatedAt`: `INTEGER`}
+	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `SpeakerID`: `BLOB`, `EpisodeID`: `BLOB`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_                = bytes.MinRead
 )
 

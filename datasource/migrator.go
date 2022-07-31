@@ -1,12 +1,13 @@
 package datasource
 
 import (
-	"BecauseLanguageBot/datasource/migrationData"
 	bindata "github.com/golang-migrate/migrate/v4/source/go_bindata"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/sqlite3"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+
+	"BecauseLanguageBot/datasource/migrationData"
 )
 
 func (source *DataSource) migrate(development bool) error {

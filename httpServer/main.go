@@ -19,6 +19,8 @@ type HttpServer struct {
 	devMode       bool
 }
 
+type MiddlewareFunc func() (gin.HandlerFunc, error)
+
 func Init(config config.HttpConfig) (*HttpServer, error) {
 
 	var server HttpServer
@@ -73,7 +75,15 @@ func loadBinTemplates() (*template.Template, error) {
 	return t, nil
 }
 
-func (server *HttpServer) Start() {
+func (server *HttpServer) Start(middlewares ...MiddlewareFunc) error {
+	for index, middleware := range middlewares {
+		instancedMiddleware, err := middleware()
+		if err != nil {
+			return errors.Because(err, nil, fmt.Sprintf("unable to instance middleware %d", index))
+		}
+		server.defaultRouter.Use(instancedMiddleware)
+	}
+
 	server.defaultRouter.GET("/", handleIndex)
 	server.defaultRouter.GET("/search", handleSearch)
 
@@ -87,6 +97,8 @@ func (server *HttpServer) Start() {
 			os.Stderr.WriteString(fmt.Sprintf("Http server listen error: %s\n", err))
 		}
 	}()
+
+	return nil
 }
 
 func (server *HttpServer) Stop() error {

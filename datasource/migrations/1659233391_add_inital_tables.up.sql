@@ -8,7 +8,7 @@ CREATE TABLE "episodes" (
     podcast_id BLOB NOT NULL,
     number integer,
     name TEXT,
-    aired_at INTEGER NOT NULL,
+    aired_at DATE NOT NULL,
     patreon_only INTEGER,
     CONSTRAINT postcast_id_check FOREIGN KEY (podcast_id) REFERENCES podcast (id)
 );
@@ -19,8 +19,8 @@ CREATE INDEX episode_order ON episodes(number);
 CREATE TABLE "speaker" (
     id BLOB NOT NULL PRIMARY KEY,
     name TEXT,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
 );
 
 CREATE TABLE "utterances" (
@@ -30,8 +30,8 @@ CREATE TABLE "utterances" (
     start_time INTEGER NOT NULL,
     end_time INTEGER NOT NULL,
     utterance TEXT,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     CONSTRAINT speaker_id_check FOREIGN KEY (speaker_id) REFERENCES speaker (id),
     CONSTRAINT episode_id_check FOREIGN KEY (episode_id) REFERENCES episodes (id)
 );
@@ -43,16 +43,16 @@ CREATE INDEX utterances_by_speaker ON utterances(speaker_id);
 CREATE TABLE "utterance_fragments" (
     id BLOB NOT NULL PRIMARY KEY,
     value TEXT,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL
 );
 
 CREATE TABLE "utterance_fragment_links" (
     utterance_id BLOB NOT NULL,
     sequence_no INTEGER NOT NULL,
     utterance_fragment_id BLOB NOT NULL,
-    created_at INTEGER NOT NULL,
-    updated_at INTEGER NOT NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
     PRIMARY KEY (utterance_id, sequence_no),
     CONSTRAINT utterance_id_check FOREIGN KEY (utterance_id) REFERENCES utterances (id),
     CONSTRAINT utterance_fragments_id_check FOREIGN KEY (utterance_fragment_id) REFERENCES utterance_fragments (id)

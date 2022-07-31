@@ -31,13 +31,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	_, err = datasource.Init(configData.DatabaseConfig, configData.DevelopmentMode)
+	dataSource, err := datasource.Init(configData.DatabaseConfig, configData.DevelopmentMode)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("database init error: %s\n", err))
 		os.Exit(1)
 	}
 
-	importer, err := transcriptImporter.Init(configData.ImporterConfig)
+	importer, err := transcriptImporter.Init(configData.ImporterConfig, dataSource)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Could not setup importer: %s\n", err))
 		os.Exit(1)
@@ -50,7 +50,11 @@ func main() {
 	}
 
 	httpInstance.SetDevelopmentMode(configData.DevelopmentMode)
-	httpInstance.Start()
+	err = httpInstance.Start(dataSource.Middleware)
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Could not start server: %s\n", err))
+		os.Exit(1)
+	}
 
 	err = importer.Start()
 	if err != nil {

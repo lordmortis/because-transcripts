@@ -721,7 +721,7 @@ func testSpeakersSelect(t *testing.T) {
 }
 
 var (
-	speakerDBTypes = map[string]string{`ID`: `BLOB`, `Name`: `TEXT`, `CreatedAt`: `INTEGER`, `UpdatedAt`: `INTEGER`}
+	speakerDBTypes = map[string]string{`ID`: `BLOB`, `Name`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_              = bytes.MinRead
 )
 

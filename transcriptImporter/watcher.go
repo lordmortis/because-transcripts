@@ -59,7 +59,7 @@ func watchEntry(importer *Importer, name string) {
 		}
 
 		if entry.stabilizedTime.Before(time.Now()) {
-			err := doImport(name)
+			err := doImport(name, importer.datasource)
 			if err != nil {
 				_, _ = os.Stderr.WriteString(fmt.Sprintf("Could not import file error: %s", err))
 			} else {

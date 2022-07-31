@@ -721,7 +721,7 @@ func testUtteranceFragmentsSelect(t *testing.T) {
 }
 
 var (
-	utteranceFragmentDBTypes = map[string]string{`ID`: `BLOB`, `Value`: `TEXT`, `CreatedAt`: `INTEGER`, `UpdatedAt`: `INTEGER`}
+	utteranceFragmentDBTypes = map[string]string{`ID`: `BLOB`, `Value`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_                        = bytes.MinRead
 )
 

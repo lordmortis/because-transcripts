@@ -829,7 +829,7 @@ func testEpisodesSelect(t *testing.T) {
 }
 
 var (
-	episodeDBTypes = map[string]string{`ID`: `BLOB`, `PodcastID`: `BLOB`, `Number`: `INTEGER`, `Name`: `TEXT`, `AiredAt`: `INTEGER`, `PatreonOnly`: `INTEGER`}
+	episodeDBTypes = map[string]string{`ID`: `BLOB`, `PodcastID`: `BLOB`, `Number`: `INTEGER`, `Name`: `TEXT`, `AiredAt`: `DATE`, `PatreonOnly`: `INTEGER`}
 	_              = bytes.MinRead
 )
 
