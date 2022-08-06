@@ -132,7 +132,6 @@ func TestToOne(t *testing.T) {
 	t.Run("UtteranceFragmentLinkToUtteranceFragmentUsingUtteranceFragment", testUtteranceFragmentLinkToOneUtteranceFragmentUsingUtteranceFragment)
 	t.Run("UtteranceFragmentLinkToUtteranceUsingUtterance", testUtteranceFragmentLinkToOneUtteranceUsingUtterance)
 	t.Run("UtteranceToEpisodeUsingEpisode", testUtteranceToOneEpisodeUsingEpisode)
-	t.Run("UtteranceToSpeakerUsingSpeaker", testUtteranceToOneSpeakerUsingSpeaker)
 }
 
 // TestOneToOne tests cannot be run in parallel
@@ -147,6 +146,7 @@ func TestToMany(t *testing.T) {
 	t.Run("SpeakerToUtterances", testSpeakerToManyUtterances)
 	t.Run("UtteranceFragmentToUtteranceFragmentLinks", testUtteranceFragmentToManyUtteranceFragmentLinks)
 	t.Run("UtteranceToUtteranceFragmentLinks", testUtteranceToManyUtteranceFragmentLinks)
+	t.Run("UtteranceToSpeakers", testUtteranceToManySpeakers)
 }
 
 // TestToOneSet tests cannot be run in parallel
@@ -156,7 +156,6 @@ func TestToOneSet(t *testing.T) {
 	t.Run("UtteranceFragmentLinkToUtteranceFragmentUsingUtteranceFragmentLinks", testUtteranceFragmentLinkToOneSetOpUtteranceFragmentUsingUtteranceFragment)
 	t.Run("UtteranceFragmentLinkToUtteranceUsingUtteranceFragmentLinks", testUtteranceFragmentLinkToOneSetOpUtteranceUsingUtterance)
 	t.Run("UtteranceToEpisodeUsingUtterances", testUtteranceToOneSetOpEpisodeUsingEpisode)
-	t.Run("UtteranceToSpeakerUsingUtterances", testUtteranceToOneSetOpSpeakerUsingSpeaker)
 }
 
 // TestToOneRemove tests cannot be run in parallel
@@ -179,15 +178,22 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("SpeakerToUtterances", testSpeakerToManyAddOpUtterances)
 	t.Run("UtteranceFragmentToUtteranceFragmentLinks", testUtteranceFragmentToManyAddOpUtteranceFragmentLinks)
 	t.Run("UtteranceToUtteranceFragmentLinks", testUtteranceToManyAddOpUtteranceFragmentLinks)
+	t.Run("UtteranceToSpeakers", testUtteranceToManyAddOpSpeakers)
 }
 
 // TestToManySet tests cannot be run in parallel
 // or deadlocks can occur.
-func TestToManySet(t *testing.T) {}
+func TestToManySet(t *testing.T) {
+	t.Run("SpeakerToUtterances", testSpeakerToManySetOpUtterances)
+	t.Run("UtteranceToSpeakers", testUtteranceToManySetOpSpeakers)
+}
 
 // TestToManyRemove tests cannot be run in parallel
 // or deadlocks can occur.
-func TestToManyRemove(t *testing.T) {}
+func TestToManyRemove(t *testing.T) {
+	t.Run("SpeakerToUtterances", testSpeakerToManyRemoveOpUtterances)
+	t.Run("UtteranceToSpeakers", testUtteranceToManyRemoveOpSpeakers)
+}
 
 func TestReload(t *testing.T) {
 	t.Run("Episodes", testEpisodesReload)

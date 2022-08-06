@@ -54,11 +54,11 @@ var SpeakerTableColumns = struct {
 	CreatedAt      string
 	UpdatedAt      string
 }{
-	ID:             "speaker.id",
-	TranscriptName: "speaker.transcript_name",
-	Name:           "speaker.name",
-	CreatedAt:      "speaker.created_at",
-	UpdatedAt:      "speaker.updated_at",
+	ID:             "speakers.id",
+	TranscriptName: "speakers.transcript_name",
+	Name:           "speakers.name",
+	CreatedAt:      "speakers.created_at",
+	UpdatedAt:      "speakers.updated_at",
 }
 
 // Generated where
@@ -93,11 +93,11 @@ var SpeakerWhere = struct {
 	CreatedAt      whereHelpertime_Time
 	UpdatedAt      whereHelpertime_Time
 }{
-	ID:             whereHelper__byte{field: "\"speaker\".\"id\""},
-	TranscriptName: whereHelperstring{field: "\"speaker\".\"transcript_name\""},
-	Name:           whereHelperstring{field: "\"speaker\".\"name\""},
-	CreatedAt:      whereHelpertime_Time{field: "\"speaker\".\"created_at\""},
-	UpdatedAt:      whereHelpertime_Time{field: "\"speaker\".\"updated_at\""},
+	ID:             whereHelper__byte{field: "\"speakers\".\"id\""},
+	TranscriptName: whereHelperstring{field: "\"speakers\".\"transcript_name\""},
+	Name:           whereHelperstring{field: "\"speakers\".\"name\""},
+	CreatedAt:      whereHelpertime_Time{field: "\"speakers\".\"created_at\""},
+	UpdatedAt:      whereHelpertime_Time{field: "\"speakers\".\"updated_at\""},
 }
 
 // SpeakerRels is where relationship names are stored.
@@ -352,7 +352,7 @@ func (q speakerQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Spea
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "datasource_raw: failed to execute a one query for speaker")
+		return nil, errors.Wrap(err, "datasource_raw: failed to execute a one query for speakers")
 	}
 
 	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
@@ -391,7 +391,7 @@ func (q speakerQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to count speaker rows")
+		return 0, errors.Wrap(err, "datasource_raw: failed to count speakers rows")
 	}
 
 	return count, nil
@@ -407,7 +407,7 @@ func (q speakerQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bo
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "datasource_raw: failed to check if speaker exists")
+		return false, errors.Wrap(err, "datasource_raw: failed to check if speakers exists")
 	}
 
 	return count > 0, nil
@@ -421,7 +421,8 @@ func (o *Speaker) Utterances(mods ...qm.QueryMod) utteranceQuery {
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"utterances\".\"speaker_id\"=?", o.ID),
+		qm.InnerJoin("\"utterance_speakers\" on \"utterances\".\"id\" = \"utterance_speakers\".\"utterance_id\""),
+		qm.Where("\"utterance_speakers\".\"speaker_id\"=?", o.ID),
 	)
 
 	return Utterances(queryMods...)
@@ -483,8 +484,10 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	}
 
 	query := NewQuery(
-		qm.From(`utterances`),
-		qm.WhereIn(`utterances.speaker_id in ?`, args...),
+		qm.Select("\"utterances\".\"id\", \"utterances\".\"episode_id\", \"utterances\".\"sequence_no\", \"utterances\".\"is_paralinguistic\", \"utterances\".\"start_time\", \"utterances\".\"end_time\", \"utterances\".\"utterance\", \"utterances\".\"created_at\", \"utterances\".\"updated_at\", \"a\".\"speaker_id\""),
+		qm.From("\"utterances\""),
+		qm.InnerJoin("\"utterance_speakers\" as \"a\" on \"utterances\".\"id\" = \"a\".\"utterance_id\""),
+		qm.WhereIn("\"a\".\"speaker_id\" in ?", args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -496,8 +499,22 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	}
 
 	var resultSlice []*Utterance
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice utterances")
+
+	var localJoinCols [][]byte
+	for results.Next() {
+		one := new(Utterance)
+		var localJoinCol []byte
+
+		err = results.Scan(&one.ID, &one.EpisodeID, &one.SequenceNo, &one.IsParalinguistic, &one.StartTime, &one.EndTime, &one.Utterance, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
+		if err != nil {
+			return errors.Wrap(err, "failed to scan eager loaded results for utterances")
+		}
+		if err = results.Err(); err != nil {
+			return errors.Wrap(err, "failed to plebian-bind eager loaded slice utterances")
+		}
+
+		resultSlice = append(resultSlice, one)
+		localJoinCols = append(localJoinCols, localJoinCol)
 	}
 
 	if err = results.Close(); err != nil {
@@ -520,19 +537,20 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 			if foreign.R == nil {
 				foreign.R = &utteranceR{}
 			}
-			foreign.R.Speaker = object
+			foreign.R.Speakers = append(foreign.R.Speakers, object)
 		}
 		return nil
 	}
 
-	for _, foreign := range resultSlice {
+	for i, foreign := range resultSlice {
+		localJoinCol := localJoinCols[i]
 		for _, local := range slice {
-			if queries.Equal(local.ID, foreign.SpeakerID) {
+			if queries.Equal(local.ID, localJoinCol) {
 				local.R.Utterances = append(local.R.Utterances, foreign)
 				if foreign.R == nil {
 					foreign.R = &utteranceR{}
 				}
-				foreign.R.Speaker = local
+				foreign.R.Speakers = append(foreign.R.Speakers, local)
 				break
 			}
 		}
@@ -544,36 +562,31 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 // AddUtterances adds the given related objects to the existing relationships
 // of the speaker, optionally inserting them as new records.
 // Appends related to o.R.Utterances.
-// Sets related.R.Speaker appropriately.
+// Sets related.R.Speakers appropriately.
 func (o *Speaker) AddUtterances(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Utterance) error {
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.SpeakerID, o.ID)
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
-		} else {
-			updateQuery := fmt.Sprintf(
-				"UPDATE \"utterances\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 0, []string{"speaker_id"}),
-				strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
-			)
-			values := []interface{}{o.ID, rel.ID}
-
-			if boil.IsDebug(ctx) {
-				writer := boil.DebugWriterFrom(ctx)
-				fmt.Fprintln(writer, updateQuery)
-				fmt.Fprintln(writer, values)
-			}
-			if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-				return errors.Wrap(err, "failed to update foreign table")
-			}
-
-			queries.Assign(&rel.SpeakerID, o.ID)
 		}
 	}
 
+	for _, rel := range related {
+		query := "insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)"
+		values := []interface{}{o.ID, rel.ID}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, query)
+			fmt.Fprintln(writer, values)
+		}
+		_, err = exec.ExecContext(ctx, query, values...)
+		if err != nil {
+			return errors.Wrap(err, "failed to insert into join table")
+		}
+	}
 	if o.R == nil {
 		o.R = &speakerR{
 			Utterances: related,
@@ -585,21 +598,118 @@ func (o *Speaker) AddUtterances(ctx context.Context, exec boil.ContextExecutor, 
 	for _, rel := range related {
 		if rel.R == nil {
 			rel.R = &utteranceR{
-				Speaker: o,
+				Speakers: SpeakerSlice{o},
 			}
 		} else {
-			rel.R.Speaker = o
+			rel.R.Speakers = append(rel.R.Speakers, o)
 		}
 	}
 	return nil
 }
 
+// SetUtterances removes all previously related items of the
+// speaker replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Speakers's Utterances accordingly.
+// Replaces o.R.Utterances with related.
+// Sets related.R.Speakers's Utterances accordingly.
+func (o *Speaker) SetUtterances(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Utterance) error {
+	query := "delete from \"utterance_speakers\" where \"speaker_id\" = ?"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	removeUtterancesFromSpeakersSlice(o, related)
+	if o.R != nil {
+		o.R.Utterances = nil
+	}
+
+	return o.AddUtterances(ctx, exec, insert, related...)
+}
+
+// RemoveUtterances relationships from objects passed in.
+// Removes related items from R.Utterances (uses pointer comparison, removal does not keep order)
+// Sets related.R.Speakers.
+func (o *Speaker) RemoveUtterances(ctx context.Context, exec boil.ContextExecutor, related ...*Utterance) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	query := fmt.Sprintf(
+		"delete from \"utterance_speakers\" where \"speaker_id\" = ? and \"utterance_id\" in (%s)",
+		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
+	)
+	values := []interface{}{o.ID}
+	for _, rel := range related {
+		values = append(values, rel.ID)
+	}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err = exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+	removeUtterancesFromSpeakersSlice(o, related)
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Utterances {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Utterances)
+			if ln > 1 && i < ln-1 {
+				o.R.Utterances[i] = o.R.Utterances[ln-1]
+			}
+			o.R.Utterances = o.R.Utterances[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+func removeUtterancesFromSpeakersSlice(o *Speaker, related []*Utterance) {
+	for _, rel := range related {
+		if rel.R == nil {
+			continue
+		}
+		for i, ri := range rel.R.Speakers {
+			if !queries.Equal(o.ID, ri.ID) {
+				continue
+			}
+
+			ln := len(rel.R.Speakers)
+			if ln > 1 && i < ln-1 {
+				rel.R.Speakers[i] = rel.R.Speakers[ln-1]
+			}
+			rel.R.Speakers = rel.R.Speakers[:ln-1]
+			break
+		}
+	}
+}
+
 // Speakers retrieves all the records using an executor.
 func Speakers(mods ...qm.QueryMod) speakerQuery {
-	mods = append(mods, qm.From("\"speaker\""))
+	mods = append(mods, qm.From("\"speakers\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"speaker\".*"})
+		queries.SetSelect(q, []string{"\"speakers\".*"})
 	}
 
 	return speakerQuery{q}
@@ -615,7 +725,7 @@ func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"speaker\" where \"id\"=?", sel,
+		"select %s from \"speakers\" where \"id\"=?", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -625,7 +735,7 @@ func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "datasource_raw: unable to select from speaker")
+		return nil, errors.Wrap(err, "datasource_raw: unable to select from speakers")
 	}
 
 	if err = speakerObj.doAfterSelectHooks(ctx, exec); err != nil {
@@ -639,7 +749,7 @@ func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
 func (o *Speaker) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("datasource_raw: no speaker provided for insertion")
+		return errors.New("datasource_raw: no speakers provided for insertion")
 	}
 
 	var err error
@@ -682,9 +792,9 @@ func (o *Speaker) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"speaker\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"speakers\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"speaker\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"speakers\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -712,7 +822,7 @@ func (o *Speaker) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "datasource_raw: unable to insert into speaker")
+		return errors.Wrap(err, "datasource_raw: unable to insert into speakers")
 	}
 
 	if !cached {
@@ -753,10 +863,10 @@ func (o *Speaker) Update(ctx context.Context, exec boil.ContextExecutor, columns
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("datasource_raw: unable to update speaker, could not build whitelist")
+			return 0, errors.New("datasource_raw: unable to update speakers, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"speaker\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"speakers\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 0, wl),
 			strmangle.WhereClause("\"", "\"", 0, speakerPrimaryKeyColumns),
 		)
@@ -776,12 +886,12 @@ func (o *Speaker) Update(ctx context.Context, exec boil.ContextExecutor, columns
 	var result sql.Result
 	result, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to update speaker row")
+		return 0, errors.Wrap(err, "datasource_raw: unable to update speakers row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by update for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by update for speakers")
 	}
 
 	if !cached {
@@ -799,12 +909,12 @@ func (q speakerQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to update all for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: unable to update all for speakers")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to retrieve rows affected for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: unable to retrieve rows affected for speakers")
 	}
 
 	return rowsAff, nil
@@ -837,7 +947,7 @@ func (o SpeakerSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"speaker\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"speakers\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 0, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(o)))
 
@@ -862,7 +972,7 @@ func (o SpeakerSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
 func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
-		return errors.New("datasource_raw: no speaker provided for upsert")
+		return errors.New("datasource_raw: no speakers provided for upsert")
 	}
 	if !boil.TimestampsAreSkipped(ctx) {
 		currTime := time.Now().In(boil.GetLocation())
@@ -926,7 +1036,7 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 		)
 
 		if updateOnConflict && len(update) == 0 {
-			return errors.New("datasource_raw: unable to upsert speaker, could not build update column list")
+			return errors.New("datasource_raw: unable to upsert speakers, could not build update column list")
 		}
 
 		conflict := conflictColumns
@@ -934,7 +1044,7 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			conflict = make([]string, len(speakerPrimaryKeyColumns))
 			copy(conflict, speakerPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"speaker\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQuerySQLite(dialect, "\"speakers\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(speakerType, speakerMapping, insert)
 		if err != nil {
@@ -969,7 +1079,7 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 		_, err = exec.ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
-		return errors.Wrap(err, "datasource_raw: unable to upsert speaker")
+		return errors.Wrap(err, "datasource_raw: unable to upsert speakers")
 	}
 
 	if !cached {
@@ -993,7 +1103,7 @@ func (o *Speaker) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), speakerPrimaryKeyMapping)
-	sql := "DELETE FROM \"speaker\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"speakers\" WHERE \"id\"=?"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1002,12 +1112,12 @@ func (o *Speaker) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to delete from speaker")
+		return 0, errors.Wrap(err, "datasource_raw: unable to delete from speakers")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by delete for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by delete for speakers")
 	}
 
 	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
@@ -1027,12 +1137,12 @@ func (q speakerQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to delete all from speaker")
+		return 0, errors.Wrap(err, "datasource_raw: unable to delete all from speakers")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for speakers")
 	}
 
 	return rowsAff, nil
@@ -1058,7 +1168,7 @@ func (o SpeakerSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"speaker\" WHERE " +
+	sql := "DELETE FROM \"speakers\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
@@ -1073,7 +1183,7 @@ func (o SpeakerSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for speaker")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for speakers")
 	}
 
 	if len(speakerAfterDeleteHooks) != 0 {
@@ -1113,7 +1223,7 @@ func (o *SpeakerSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"speaker\".* FROM \"speaker\" WHERE " +
+	sql := "SELECT \"speakers\".* FROM \"speakers\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
@@ -1131,7 +1241,7 @@ func (o *SpeakerSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 // SpeakerExists checks if the Speaker row exists.
 func SpeakerExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"speaker\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"speakers\" where \"id\"=? limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1142,7 +1252,7 @@ func SpeakerExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (b
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "datasource_raw: unable to check if speaker exists")
+		return false, errors.Wrap(err, "datasource_raw: unable to check if speakers exists")
 	}
 
 	return exists, nil

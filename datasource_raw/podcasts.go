@@ -43,8 +43,8 @@ var PodcastTableColumns = struct {
 	ID   string
 	Name string
 }{
-	ID:   "podcast.id",
-	Name: "podcast.name",
+	ID:   "podcasts.id",
+	Name: "podcasts.name",
 }
 
 // Generated where
@@ -53,8 +53,8 @@ var PodcastWhere = struct {
 	ID   whereHelper__byte
 	Name whereHelpernull_String
 }{
-	ID:   whereHelper__byte{field: "\"podcast\".\"id\""},
-	Name: whereHelpernull_String{field: "\"podcast\".\"name\""},
+	ID:   whereHelper__byte{field: "\"podcasts\".\"id\""},
+	Name: whereHelpernull_String{field: "\"podcasts\".\"name\""},
 }
 
 // PodcastRels is where relationship names are stored.
@@ -309,7 +309,7 @@ func (q podcastQuery) One(ctx context.Context, exec boil.ContextExecutor) (*Podc
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "datasource_raw: failed to execute a one query for podcast")
+		return nil, errors.Wrap(err, "datasource_raw: failed to execute a one query for podcasts")
 	}
 
 	if err := o.doAfterSelectHooks(ctx, exec); err != nil {
@@ -348,7 +348,7 @@ func (q podcastQuery) Count(ctx context.Context, exec boil.ContextExecutor) (int
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to count podcast rows")
+		return 0, errors.Wrap(err, "datasource_raw: failed to count podcasts rows")
 	}
 
 	return count, nil
@@ -364,7 +364,7 @@ func (q podcastQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bo
 
 	err := q.Query.QueryRowContext(ctx, exec).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "datasource_raw: failed to check if podcast exists")
+		return false, errors.Wrap(err, "datasource_raw: failed to check if podcasts exists")
 	}
 
 	return count > 0, nil
@@ -553,10 +553,10 @@ func (o *Podcast) AddEpisodes(ctx context.Context, exec boil.ContextExecutor, in
 
 // Podcasts retrieves all the records using an executor.
 func Podcasts(mods ...qm.QueryMod) podcastQuery {
-	mods = append(mods, qm.From("\"podcast\""))
+	mods = append(mods, qm.From("\"podcasts\""))
 	q := NewQuery(mods...)
 	if len(queries.GetSelect(q)) == 0 {
-		queries.SetSelect(q, []string{"\"podcast\".*"})
+		queries.SetSelect(q, []string{"\"podcasts\".*"})
 	}
 
 	return podcastQuery{q}
@@ -572,7 +572,7 @@ func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"podcast\" where \"id\"=?", sel,
+		"select %s from \"podcasts\" where \"id\"=?", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -582,7 +582,7 @@ func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, sql.ErrNoRows
 		}
-		return nil, errors.Wrap(err, "datasource_raw: unable to select from podcast")
+		return nil, errors.Wrap(err, "datasource_raw: unable to select from podcasts")
 	}
 
 	if err = podcastObj.doAfterSelectHooks(ctx, exec); err != nil {
@@ -596,7 +596,7 @@ func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 // See boil.Columns.InsertColumnSet documentation to understand column list inference for inserts.
 func (o *Podcast) Insert(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) error {
 	if o == nil {
-		return errors.New("datasource_raw: no podcast provided for insertion")
+		return errors.New("datasource_raw: no podcasts provided for insertion")
 	}
 
 	var err error
@@ -629,9 +629,9 @@ func (o *Podcast) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 			return err
 		}
 		if len(wl) != 0 {
-			cache.query = fmt.Sprintf("INSERT INTO \"podcast\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
+			cache.query = fmt.Sprintf("INSERT INTO \"podcasts\" (\"%s\") %%sVALUES (%s)%%s", strings.Join(wl, "\",\""), strmangle.Placeholders(dialect.UseIndexPlaceholders, len(wl), 1, 1))
 		} else {
-			cache.query = "INSERT INTO \"podcast\" %sDEFAULT VALUES%s"
+			cache.query = "INSERT INTO \"podcasts\" %sDEFAULT VALUES%s"
 		}
 
 		var queryOutput, queryReturning string
@@ -659,7 +659,7 @@ func (o *Podcast) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	}
 
 	if err != nil {
-		return errors.Wrap(err, "datasource_raw: unable to insert into podcast")
+		return errors.Wrap(err, "datasource_raw: unable to insert into podcasts")
 	}
 
 	if !cached {
@@ -694,10 +694,10 @@ func (o *Podcast) Update(ctx context.Context, exec boil.ContextExecutor, columns
 			wl = strmangle.SetComplement(wl, []string{"created_at"})
 		}
 		if len(wl) == 0 {
-			return 0, errors.New("datasource_raw: unable to update podcast, could not build whitelist")
+			return 0, errors.New("datasource_raw: unable to update podcasts, could not build whitelist")
 		}
 
-		cache.query = fmt.Sprintf("UPDATE \"podcast\" SET %s WHERE %s",
+		cache.query = fmt.Sprintf("UPDATE \"podcasts\" SET %s WHERE %s",
 			strmangle.SetParamNames("\"", "\"", 0, wl),
 			strmangle.WhereClause("\"", "\"", 0, podcastPrimaryKeyColumns),
 		)
@@ -717,12 +717,12 @@ func (o *Podcast) Update(ctx context.Context, exec boil.ContextExecutor, columns
 	var result sql.Result
 	result, err = exec.ExecContext(ctx, cache.query, values...)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to update podcast row")
+		return 0, errors.Wrap(err, "datasource_raw: unable to update podcasts row")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by update for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by update for podcasts")
 	}
 
 	if !cached {
@@ -740,12 +740,12 @@ func (q podcastQuery) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to update all for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: unable to update all for podcasts")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to retrieve rows affected for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: unable to retrieve rows affected for podcasts")
 	}
 
 	return rowsAff, nil
@@ -778,7 +778,7 @@ func (o PodcastSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := fmt.Sprintf("UPDATE \"podcast\" SET %s WHERE %s",
+	sql := fmt.Sprintf("UPDATE \"podcasts\" SET %s WHERE %s",
 		strmangle.SetParamNames("\"", "\"", 0, colNames),
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(o)))
 
@@ -803,7 +803,7 @@ func (o PodcastSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 // See boil.Columns documentation for how to properly use updateColumns and insertColumns.
 func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
-		return errors.New("datasource_raw: no podcast provided for upsert")
+		return errors.New("datasource_raw: no podcasts provided for upsert")
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
@@ -859,7 +859,7 @@ func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 		)
 
 		if updateOnConflict && len(update) == 0 {
-			return errors.New("datasource_raw: unable to upsert podcast, could not build update column list")
+			return errors.New("datasource_raw: unable to upsert podcasts, could not build update column list")
 		}
 
 		conflict := conflictColumns
@@ -867,7 +867,7 @@ func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			conflict = make([]string, len(podcastPrimaryKeyColumns))
 			copy(conflict, podcastPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"podcast\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQuerySQLite(dialect, "\"podcasts\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(podcastType, podcastMapping, insert)
 		if err != nil {
@@ -902,7 +902,7 @@ func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 		_, err = exec.ExecContext(ctx, cache.query, vals...)
 	}
 	if err != nil {
-		return errors.Wrap(err, "datasource_raw: unable to upsert podcast")
+		return errors.Wrap(err, "datasource_raw: unable to upsert podcasts")
 	}
 
 	if !cached {
@@ -926,7 +926,7 @@ func (o *Podcast) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), podcastPrimaryKeyMapping)
-	sql := "DELETE FROM \"podcast\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"podcasts\" WHERE \"id\"=?"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -935,12 +935,12 @@ func (o *Podcast) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 	result, err := exec.ExecContext(ctx, sql, args...)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to delete from podcast")
+		return 0, errors.Wrap(err, "datasource_raw: unable to delete from podcasts")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by delete for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by delete for podcasts")
 	}
 
 	if err := o.doAfterDeleteHooks(ctx, exec); err != nil {
@@ -960,12 +960,12 @@ func (q podcastQuery) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 
 	result, err := q.Query.ExecContext(ctx, exec)
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: unable to delete all from podcast")
+		return 0, errors.Wrap(err, "datasource_raw: unable to delete all from podcasts")
 	}
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for podcasts")
 	}
 
 	return rowsAff, nil
@@ -991,7 +991,7 @@ func (o PodcastSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "DELETE FROM \"podcast\" WHERE " +
+	sql := "DELETE FROM \"podcasts\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
@@ -1006,7 +1006,7 @@ func (o PodcastSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 
 	rowsAff, err := result.RowsAffected()
 	if err != nil {
-		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for podcast")
+		return 0, errors.Wrap(err, "datasource_raw: failed to get rows affected by deleteall for podcasts")
 	}
 
 	if len(podcastAfterDeleteHooks) != 0 {
@@ -1046,7 +1046,7 @@ func (o *PodcastSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 		args = append(args, pkeyArgs...)
 	}
 
-	sql := "SELECT \"podcast\".* FROM \"podcast\" WHERE " +
+	sql := "SELECT \"podcasts\".* FROM \"podcasts\" WHERE " +
 		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
@@ -1064,7 +1064,7 @@ func (o *PodcastSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 // PodcastExists checks if the Podcast row exists.
 func PodcastExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"podcast\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"podcasts\" where \"id\"=? limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1075,7 +1075,7 @@ func PodcastExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (b
 
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, errors.Wrap(err, "datasource_raw: unable to check if podcast exists")
+		return false, errors.Wrap(err, "datasource_raw: unable to check if podcasts exists")
 	}
 
 	return exists, nil

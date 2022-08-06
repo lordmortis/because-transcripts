@@ -573,8 +573,8 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 	}
 
 	query := NewQuery(
-		qm.From(`podcast`),
-		qm.WhereIn(`podcast.id in ?`, args...),
+		qm.From(`podcasts`),
+		qm.WhereIn(`podcasts.id in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -591,10 +591,10 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for podcast")
+		return errors.Wrap(err, "failed to close results of eager load for podcasts")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for podcast")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for podcasts")
 	}
 
 	if len(episodeAfterSelectHooks) != 0 {

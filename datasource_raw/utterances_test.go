@@ -571,6 +571,90 @@ func testUtteranceToManyUtteranceFragmentLinks(t *testing.T) {
 	}
 }
 
+func testUtteranceToManySpeakers(t *testing.T) {
+	var err error
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Utterance
+	var b, c Speaker
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, utteranceDBTypes, true, utteranceColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Utterance struct: %s", err)
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = randomize.Struct(seed, &b, speakerDBTypes, false, speakerColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+	if err = randomize.Struct(seed, &c, speakerDBTypes, false, speakerColumnsWithDefault...); err != nil {
+		t.Fatal(err)
+	}
+
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)", a.ID, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)", a.ID, c.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	check, err := a.Speakers().All(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bFound, cFound := false, false
+	for _, v := range check {
+		if queries.Equal(v.ID, b.ID) {
+			bFound = true
+		}
+		if queries.Equal(v.ID, c.ID) {
+			cFound = true
+		}
+	}
+
+	if !bFound {
+		t.Error("expected to find b")
+	}
+	if !cFound {
+		t.Error("expected to find c")
+	}
+
+	slice := UtteranceSlice{&a}
+	if err = a.L.LoadSpeakers(ctx, tx, false, (*[]*Utterance)(&slice), nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Speakers); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	a.R.Speakers = nil
+	if err = a.L.LoadSpeakers(ctx, tx, true, &a, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got := len(a.R.Speakers); got != 2 {
+		t.Error("number of eager loaded records wrong, got:", got)
+	}
+
+	if t.Failed() {
+		t.Logf("%#v", check)
+	}
+}
+
 func testUtteranceToManyAddOpUtteranceFragmentLinks(t *testing.T) {
 	var err error
 
@@ -646,6 +730,234 @@ func testUtteranceToManyAddOpUtteranceFragmentLinks(t *testing.T) {
 		}
 	}
 }
+func testUtteranceToManyAddOpSpeakers(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Utterance
+	var b, c, d, e Speaker
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Speaker{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	foreignersSplitByInsertion := [][]*Speaker{
+		{&b, &c},
+		{&d, &e},
+	}
+
+	for i, x := range foreignersSplitByInsertion {
+		err = a.AddSpeakers(ctx, tx, i != 0, x...)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		first := x[0]
+		second := x[1]
+
+		if first.R.Utterances[0] != &a {
+			t.Error("relationship was not added properly to the slice")
+		}
+		if second.R.Utterances[0] != &a {
+			t.Error("relationship was not added properly to the slice")
+		}
+
+		if a.R.Speakers[i*2] != first {
+			t.Error("relationship struct slice not set to correct value")
+		}
+		if a.R.Speakers[i*2+1] != second {
+			t.Error("relationship struct slice not set to correct value")
+		}
+
+		count, err := a.Speakers().Count(ctx, tx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := int64((i + 1) * 2); count != want {
+			t.Error("want", want, "got", count)
+		}
+	}
+}
+
+func testUtteranceToManySetOpSpeakers(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Utterance
+	var b, c, d, e Speaker
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Speaker{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.SetSpeakers(ctx, tx, false, &b, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.Speakers().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.SetSpeakers(ctx, tx, true, &d, &e)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.Speakers().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	// The following checks cannot be implemented since we have no handle
+	// to these when we call Set(). Leaving them here as wishful thinking
+	// and to let people know there's dragons.
+	//
+	// if len(b.R.Utterances) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	// if len(c.R.Utterances) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	if d.R.Utterances[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+	if e.R.Utterances[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+
+	if a.R.Speakers[0] != &d {
+		t.Error("relationship struct slice not set to correct value")
+	}
+	if a.R.Speakers[1] != &e {
+		t.Error("relationship struct slice not set to correct value")
+	}
+}
+
+func testUtteranceToManyRemoveOpSpeakers(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Utterance
+	var b, c, d, e Speaker
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Speaker{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.AddSpeakers(ctx, tx, true, foreigners...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.Speakers().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.RemoveSpeakers(ctx, tx, foreigners[:2]...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.Speakers().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if len(b.R.Utterances) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if len(c.R.Utterances) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if d.R.Utterances[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+	if e.R.Utterances[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+
+	if len(a.R.Speakers) != 2 {
+		t.Error("should have preserved two relationships")
+	}
+
+	// Removal doesn't do a stable deletion for performance so we have to flip the order
+	if a.R.Speakers[1] != &d {
+		t.Error("relationship to d should have been preserved")
+	}
+	if a.R.Speakers[0] != &e {
+		t.Error("relationship to e should have been preserved")
+	}
+}
+
 func testUtteranceToOneEpisodeUsingEpisode(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
@@ -693,57 +1005,6 @@ func testUtteranceToOneEpisodeUsingEpisode(t *testing.T) {
 		t.Fatal(err)
 	}
 	if local.R.Episode == nil {
-		t.Error("struct should have been eager loaded")
-	}
-}
-
-func testUtteranceToOneSpeakerUsingSpeaker(t *testing.T) {
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var local Utterance
-	var foreign Speaker
-
-	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, utteranceDBTypes, false, utteranceColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Utterance struct: %s", err)
-	}
-	if err := randomize.Struct(seed, &foreign, speakerDBTypes, false, speakerColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Speaker struct: %s", err)
-	}
-
-	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	queries.Assign(&local.SpeakerID, foreign.ID)
-	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	check, err := local.Speaker().One(ctx, tx)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !queries.Equal(check.ID, foreign.ID) {
-		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
-	}
-
-	slice := UtteranceSlice{&local}
-	if err = local.L.LoadSpeaker(ctx, tx, false, (*[]*Utterance)(&slice), nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Speaker == nil {
-		t.Error("struct should have been eager loaded")
-	}
-
-	local.R.Speaker = nil
-	if err = local.L.LoadSpeaker(ctx, tx, true, &local, nil); err != nil {
-		t.Fatal(err)
-	}
-	if local.R.Speaker == nil {
 		t.Error("struct should have been eager loaded")
 	}
 }
@@ -802,63 +1063,6 @@ func testUtteranceToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 
 		if !queries.Equal(a.EpisodeID, x.ID) {
 			t.Error("foreign key was wrong value", a.EpisodeID, x.ID)
-		}
-	}
-}
-func testUtteranceToOneSetOpSpeakerUsingSpeaker(t *testing.T) {
-	var err error
-
-	ctx := context.Background()
-	tx := MustTx(boil.BeginTx(ctx, nil))
-	defer func() { _ = tx.Rollback() }()
-
-	var a Utterance
-	var b, c Speaker
-
-	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &b, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-	if err = randomize.Struct(seed, &c, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
-		t.Fatal(err)
-	}
-
-	for i, x := range []*Speaker{&b, &c} {
-		err = a.SetSpeaker(ctx, tx, i != 0, x)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if a.R.Speaker != x {
-			t.Error("relationship struct not set to correct value")
-		}
-
-		if x.R.Utterances[0] != &a {
-			t.Error("failed to append to foreign relationship struct")
-		}
-		if !queries.Equal(a.SpeakerID, x.ID) {
-			t.Error("foreign key was wrong value", a.SpeakerID)
-		}
-
-		zero := reflect.Zero(reflect.TypeOf(a.SpeakerID))
-		reflect.Indirect(reflect.ValueOf(&a.SpeakerID)).Set(zero)
-
-		if err = a.Reload(ctx, tx); err != nil {
-			t.Fatal("failed to reload", err)
-		}
-
-		if !queries.Equal(a.SpeakerID, x.ID) {
-			t.Error("foreign key was wrong value", a.SpeakerID, x.ID)
 		}
 	}
 }
@@ -937,7 +1141,7 @@ func testUtterancesSelect(t *testing.T) {
 }
 
 var (
-	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `SpeakerID`: `BLOB`, `EpisodeID`: `BLOB`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `EpisodeID`: `BLOB`, `SequenceNo`: `INTEGER`, `IsParalinguistic`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_                = bytes.MinRead
 )
 

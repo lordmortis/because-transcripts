@@ -24,97 +24,104 @@ import (
 
 // Utterance is an object representing the database table.
 type Utterance struct {
-	ID        []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	SpeakerID []byte      `boil:"speaker_id" json:"speaker_id" toml:"speaker_id" yaml:"speaker_id"`
-	EpisodeID []byte      `boil:"episode_id" json:"episode_id" toml:"episode_id" yaml:"episode_id"`
-	StartTime int64       `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
-	EndTime   int64       `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
-	Utterance null.String `boil:"utterance" json:"utterance,omitempty" toml:"utterance" yaml:"utterance,omitempty"`
-	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID               []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	EpisodeID        []byte      `boil:"episode_id" json:"episode_id" toml:"episode_id" yaml:"episode_id"`
+	SequenceNo       int64       `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
+	IsParalinguistic int64       `boil:"is_paralinguistic" json:"is_paralinguistic" toml:"is_paralinguistic" yaml:"is_paralinguistic"`
+	StartTime        null.Int64  `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
+	EndTime          null.Int64  `boil:"end_time" json:"end_time,omitempty" toml:"end_time" yaml:"end_time,omitempty"`
+	Utterance        null.String `boil:"utterance" json:"utterance,omitempty" toml:"utterance" yaml:"utterance,omitempty"`
+	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt        time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *utteranceR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L utteranceL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var UtteranceColumns = struct {
-	ID        string
-	SpeakerID string
-	EpisodeID string
-	StartTime string
-	EndTime   string
-	Utterance string
-	CreatedAt string
-	UpdatedAt string
+	ID               string
+	EpisodeID        string
+	SequenceNo       string
+	IsParalinguistic string
+	StartTime        string
+	EndTime          string
+	Utterance        string
+	CreatedAt        string
+	UpdatedAt        string
 }{
-	ID:        "id",
-	SpeakerID: "speaker_id",
-	EpisodeID: "episode_id",
-	StartTime: "start_time",
-	EndTime:   "end_time",
-	Utterance: "utterance",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	ID:               "id",
+	EpisodeID:        "episode_id",
+	SequenceNo:       "sequence_no",
+	IsParalinguistic: "is_paralinguistic",
+	StartTime:        "start_time",
+	EndTime:          "end_time",
+	Utterance:        "utterance",
+	CreatedAt:        "created_at",
+	UpdatedAt:        "updated_at",
 }
 
 var UtteranceTableColumns = struct {
-	ID        string
-	SpeakerID string
-	EpisodeID string
-	StartTime string
-	EndTime   string
-	Utterance string
-	CreatedAt string
-	UpdatedAt string
+	ID               string
+	EpisodeID        string
+	SequenceNo       string
+	IsParalinguistic string
+	StartTime        string
+	EndTime          string
+	Utterance        string
+	CreatedAt        string
+	UpdatedAt        string
 }{
-	ID:        "utterances.id",
-	SpeakerID: "utterances.speaker_id",
-	EpisodeID: "utterances.episode_id",
-	StartTime: "utterances.start_time",
-	EndTime:   "utterances.end_time",
-	Utterance: "utterances.utterance",
-	CreatedAt: "utterances.created_at",
-	UpdatedAt: "utterances.updated_at",
+	ID:               "utterances.id",
+	EpisodeID:        "utterances.episode_id",
+	SequenceNo:       "utterances.sequence_no",
+	IsParalinguistic: "utterances.is_paralinguistic",
+	StartTime:        "utterances.start_time",
+	EndTime:          "utterances.end_time",
+	Utterance:        "utterances.utterance",
+	CreatedAt:        "utterances.created_at",
+	UpdatedAt:        "utterances.updated_at",
 }
 
 // Generated where
 
 var UtteranceWhere = struct {
-	ID        whereHelper__byte
-	SpeakerID whereHelper__byte
-	EpisodeID whereHelper__byte
-	StartTime whereHelperint64
-	EndTime   whereHelperint64
-	Utterance whereHelpernull_String
-	CreatedAt whereHelpertime_Time
-	UpdatedAt whereHelpertime_Time
+	ID               whereHelper__byte
+	EpisodeID        whereHelper__byte
+	SequenceNo       whereHelperint64
+	IsParalinguistic whereHelperint64
+	StartTime        whereHelpernull_Int64
+	EndTime          whereHelpernull_Int64
+	Utterance        whereHelpernull_String
+	CreatedAt        whereHelpertime_Time
+	UpdatedAt        whereHelpertime_Time
 }{
-	ID:        whereHelper__byte{field: "\"utterances\".\"id\""},
-	SpeakerID: whereHelper__byte{field: "\"utterances\".\"speaker_id\""},
-	EpisodeID: whereHelper__byte{field: "\"utterances\".\"episode_id\""},
-	StartTime: whereHelperint64{field: "\"utterances\".\"start_time\""},
-	EndTime:   whereHelperint64{field: "\"utterances\".\"end_time\""},
-	Utterance: whereHelpernull_String{field: "\"utterances\".\"utterance\""},
-	CreatedAt: whereHelpertime_Time{field: "\"utterances\".\"created_at\""},
-	UpdatedAt: whereHelpertime_Time{field: "\"utterances\".\"updated_at\""},
+	ID:               whereHelper__byte{field: "\"utterances\".\"id\""},
+	EpisodeID:        whereHelper__byte{field: "\"utterances\".\"episode_id\""},
+	SequenceNo:       whereHelperint64{field: "\"utterances\".\"sequence_no\""},
+	IsParalinguistic: whereHelperint64{field: "\"utterances\".\"is_paralinguistic\""},
+	StartTime:        whereHelpernull_Int64{field: "\"utterances\".\"start_time\""},
+	EndTime:          whereHelpernull_Int64{field: "\"utterances\".\"end_time\""},
+	Utterance:        whereHelpernull_String{field: "\"utterances\".\"utterance\""},
+	CreatedAt:        whereHelpertime_Time{field: "\"utterances\".\"created_at\""},
+	UpdatedAt:        whereHelpertime_Time{field: "\"utterances\".\"updated_at\""},
 }
 
 // UtteranceRels is where relationship names are stored.
 var UtteranceRels = struct {
 	Episode                string
-	Speaker                string
 	UtteranceFragmentLinks string
+	Speakers               string
 }{
 	Episode:                "Episode",
-	Speaker:                "Speaker",
 	UtteranceFragmentLinks: "UtteranceFragmentLinks",
+	Speakers:               "Speakers",
 }
 
 // utteranceR is where relationships are stored.
 type utteranceR struct {
 	Episode                *Episode                   `boil:"Episode" json:"Episode" toml:"Episode" yaml:"Episode"`
-	Speaker                *Speaker                   `boil:"Speaker" json:"Speaker" toml:"Speaker" yaml:"Speaker"`
 	UtteranceFragmentLinks UtteranceFragmentLinkSlice `boil:"UtteranceFragmentLinks" json:"UtteranceFragmentLinks" toml:"UtteranceFragmentLinks" yaml:"UtteranceFragmentLinks"`
+	Speakers               SpeakerSlice               `boil:"Speakers" json:"Speakers" toml:"Speakers" yaml:"Speakers"`
 }
 
 // NewStruct creates a new relationship struct
@@ -129,13 +136,6 @@ func (r *utteranceR) GetEpisode() *Episode {
 	return r.Episode
 }
 
-func (r *utteranceR) GetSpeaker() *Speaker {
-	if r == nil {
-		return nil
-	}
-	return r.Speaker
-}
-
 func (r *utteranceR) GetUtteranceFragmentLinks() UtteranceFragmentLinkSlice {
 	if r == nil {
 		return nil
@@ -143,13 +143,20 @@ func (r *utteranceR) GetUtteranceFragmentLinks() UtteranceFragmentLinkSlice {
 	return r.UtteranceFragmentLinks
 }
 
+func (r *utteranceR) GetSpeakers() SpeakerSlice {
+	if r == nil {
+		return nil
+	}
+	return r.Speakers
+}
+
 // utteranceL is where Load methods for each relationship are stored.
 type utteranceL struct{}
 
 var (
-	utteranceAllColumns            = []string{"id", "speaker_id", "episode_id", "start_time", "end_time", "utterance", "created_at", "updated_at"}
-	utteranceColumnsWithoutDefault = []string{"id", "speaker_id", "episode_id", "start_time", "end_time", "created_at", "updated_at"}
-	utteranceColumnsWithDefault    = []string{"utterance"}
+	utteranceAllColumns            = []string{"id", "episode_id", "sequence_no", "is_paralinguistic", "start_time", "end_time", "utterance", "created_at", "updated_at"}
+	utteranceColumnsWithoutDefault = []string{"id", "episode_id", "sequence_no", "is_paralinguistic", "created_at", "updated_at"}
+	utteranceColumnsWithDefault    = []string{"start_time", "end_time", "utterance"}
 	utterancePrimaryKeyColumns     = []string{"id"}
 	utteranceGeneratedColumns      = []string{}
 )
@@ -443,17 +450,6 @@ func (o *Utterance) Episode(mods ...qm.QueryMod) episodeQuery {
 	return Episodes(queryMods...)
 }
 
-// Speaker pointed to by the foreign key.
-func (o *Utterance) Speaker(mods ...qm.QueryMod) speakerQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.SpeakerID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Speakers(queryMods...)
-}
-
 // UtteranceFragmentLinks retrieves all the utterance_fragment_link's UtteranceFragmentLinks with an executor.
 func (o *Utterance) UtteranceFragmentLinks(mods ...qm.QueryMod) utteranceFragmentLinkQuery {
 	var queryMods []qm.QueryMod
@@ -466,6 +462,21 @@ func (o *Utterance) UtteranceFragmentLinks(mods ...qm.QueryMod) utteranceFragmen
 	)
 
 	return UtteranceFragmentLinks(queryMods...)
+}
+
+// Speakers retrieves all the speaker's Speakers with an executor.
+func (o *Utterance) Speakers(mods ...qm.QueryMod) speakerQuery {
+	var queryMods []qm.QueryMod
+	if len(mods) != 0 {
+		queryMods = append(queryMods, mods...)
+	}
+
+	queryMods = append(queryMods,
+		qm.InnerJoin("\"utterance_speakers\" on \"speakers\".\"id\" = \"utterance_speakers\".\"speaker_id\""),
+		qm.Where("\"utterance_speakers\".\"utterance_id\"=?", o.ID),
+	)
+
+	return Speakers(queryMods...)
 }
 
 // LoadEpisode allows an eager lookup of values, cached into the
@@ -592,130 +603,6 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 	return nil
 }
 
-// LoadSpeaker allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (utteranceL) LoadSpeaker(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUtterance interface{}, mods queries.Applicator) error {
-	var slice []*Utterance
-	var object *Utterance
-
-	if singular {
-		var ok bool
-		object, ok = maybeUtterance.(*Utterance)
-		if !ok {
-			object = new(Utterance)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeUtterance)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUtterance))
-			}
-		}
-	} else {
-		s, ok := maybeUtterance.(*[]*Utterance)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeUtterance)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUtterance))
-			}
-		}
-	}
-
-	args := make([]interface{}, 0, 1)
-	if singular {
-		if object.R == nil {
-			object.R = &utteranceR{}
-		}
-		if !queries.IsNil(object.SpeakerID) {
-			args = append(args, object.SpeakerID)
-		}
-
-	} else {
-	Outer:
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &utteranceR{}
-			}
-
-			for _, a := range args {
-				if queries.Equal(a, obj.SpeakerID) {
-					continue Outer
-				}
-			}
-
-			if !queries.IsNil(obj.SpeakerID) {
-				args = append(args, obj.SpeakerID)
-			}
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	query := NewQuery(
-		qm.From(`speaker`),
-		qm.WhereIn(`speaker.id in ?`, args...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Speaker")
-	}
-
-	var resultSlice []*Speaker
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Speaker")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for speaker")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for speaker")
-	}
-
-	if len(utteranceAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.Speaker = foreign
-		if foreign.R == nil {
-			foreign.R = &speakerR{}
-		}
-		foreign.R.Utterances = append(foreign.R.Utterances, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if queries.Equal(local.SpeakerID, foreign.ID) {
-				local.R.Speaker = foreign
-				if foreign.R == nil {
-					foreign.R = &speakerR{}
-				}
-				foreign.R.Utterances = append(foreign.R.Utterances, local)
-				break
-			}
-		}
-	}
-
-	return nil
-}
-
 // LoadUtteranceFragmentLinks allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
 func (utteranceL) LoadUtteranceFragmentLinks(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUtterance interface{}, mods queries.Applicator) error {
@@ -830,6 +717,137 @@ func (utteranceL) LoadUtteranceFragmentLinks(ctx context.Context, e boil.Context
 	return nil
 }
 
+// LoadSpeakers allows an eager lookup of values, cached into the
+// loaded structs of the objects. This is for a 1-M or N-M relationship.
+func (utteranceL) LoadSpeakers(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUtterance interface{}, mods queries.Applicator) error {
+	var slice []*Utterance
+	var object *Utterance
+
+	if singular {
+		var ok bool
+		object, ok = maybeUtterance.(*Utterance)
+		if !ok {
+			object = new(Utterance)
+			ok = queries.SetFromEmbeddedStruct(&object, &maybeUtterance)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeUtterance))
+			}
+		}
+	} else {
+		s, ok := maybeUtterance.(*[]*Utterance)
+		if ok {
+			slice = *s
+		} else {
+			ok = queries.SetFromEmbeddedStruct(&slice, maybeUtterance)
+			if !ok {
+				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeUtterance))
+			}
+		}
+	}
+
+	args := make([]interface{}, 0, 1)
+	if singular {
+		if object.R == nil {
+			object.R = &utteranceR{}
+		}
+		args = append(args, object.ID)
+	} else {
+	Outer:
+		for _, obj := range slice {
+			if obj.R == nil {
+				obj.R = &utteranceR{}
+			}
+
+			for _, a := range args {
+				if queries.Equal(a, obj.ID) {
+					continue Outer
+				}
+			}
+
+			args = append(args, obj.ID)
+		}
+	}
+
+	if len(args) == 0 {
+		return nil
+	}
+
+	query := NewQuery(
+		qm.Select("\"speakers\".\"id\", \"speakers\".\"transcript_name\", \"speakers\".\"name\", \"speakers\".\"created_at\", \"speakers\".\"updated_at\", \"a\".\"utterance_id\""),
+		qm.From("\"speakers\""),
+		qm.InnerJoin("\"utterance_speakers\" as \"a\" on \"speakers\".\"id\" = \"a\".\"speaker_id\""),
+		qm.WhereIn("\"a\".\"utterance_id\" in ?", args...),
+	)
+	if mods != nil {
+		mods.Apply(query)
+	}
+
+	results, err := query.QueryContext(ctx, e)
+	if err != nil {
+		return errors.Wrap(err, "failed to eager load speakers")
+	}
+
+	var resultSlice []*Speaker
+
+	var localJoinCols [][]byte
+	for results.Next() {
+		one := new(Speaker)
+		var localJoinCol []byte
+
+		err = results.Scan(&one.ID, &one.TranscriptName, &one.Name, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
+		if err != nil {
+			return errors.Wrap(err, "failed to scan eager loaded results for speakers")
+		}
+		if err = results.Err(); err != nil {
+			return errors.Wrap(err, "failed to plebian-bind eager loaded slice speakers")
+		}
+
+		resultSlice = append(resultSlice, one)
+		localJoinCols = append(localJoinCols, localJoinCol)
+	}
+
+	if err = results.Close(); err != nil {
+		return errors.Wrap(err, "failed to close results in eager load on speakers")
+	}
+	if err = results.Err(); err != nil {
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for speakers")
+	}
+
+	if len(speakerAfterSelectHooks) != 0 {
+		for _, obj := range resultSlice {
+			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
+				return err
+			}
+		}
+	}
+	if singular {
+		object.R.Speakers = resultSlice
+		for _, foreign := range resultSlice {
+			if foreign.R == nil {
+				foreign.R = &speakerR{}
+			}
+			foreign.R.Utterances = append(foreign.R.Utterances, object)
+		}
+		return nil
+	}
+
+	for i, foreign := range resultSlice {
+		localJoinCol := localJoinCols[i]
+		for _, local := range slice {
+			if queries.Equal(local.ID, localJoinCol) {
+				local.R.Speakers = append(local.R.Speakers, foreign)
+				if foreign.R == nil {
+					foreign.R = &speakerR{}
+				}
+				foreign.R.Utterances = append(foreign.R.Utterances, local)
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
 // SetEpisode of the utterance to the related item.
 // Sets o.R.Episode to related.
 // Adds o to related.R.Utterances.
@@ -868,53 +886,6 @@ func (o *Utterance) SetEpisode(ctx context.Context, exec boil.ContextExecutor, i
 
 	if related.R == nil {
 		related.R = &episodeR{
-			Utterances: UtteranceSlice{o},
-		}
-	} else {
-		related.R.Utterances = append(related.R.Utterances, o)
-	}
-
-	return nil
-}
-
-// SetSpeaker of the utterance to the related item.
-// Sets o.R.Speaker to related.
-// Adds o to related.R.Utterances.
-func (o *Utterance) SetSpeaker(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Speaker) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"utterances\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, []string{"speaker_id"}),
-		strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	queries.Assign(&o.SpeakerID, related.ID)
-	if o.R == nil {
-		o.R = &utteranceR{
-			Speaker: related,
-		}
-	} else {
-		o.R.Speaker = related
-	}
-
-	if related.R == nil {
-		related.R = &speakerR{
 			Utterances: UtteranceSlice{o},
 		}
 	} else {
@@ -975,6 +946,151 @@ func (o *Utterance) AddUtteranceFragmentLinks(ctx context.Context, exec boil.Con
 		}
 	}
 	return nil
+}
+
+// AddSpeakers adds the given related objects to the existing relationships
+// of the utterance, optionally inserting them as new records.
+// Appends related to o.R.Speakers.
+// Sets related.R.Utterances appropriately.
+func (o *Utterance) AddSpeakers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Speaker) error {
+	var err error
+	for _, rel := range related {
+		if insert {
+			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
+				return errors.Wrap(err, "failed to insert into foreign table")
+			}
+		}
+	}
+
+	for _, rel := range related {
+		query := "insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)"
+		values := []interface{}{o.ID, rel.ID}
+
+		if boil.IsDebug(ctx) {
+			writer := boil.DebugWriterFrom(ctx)
+			fmt.Fprintln(writer, query)
+			fmt.Fprintln(writer, values)
+		}
+		_, err = exec.ExecContext(ctx, query, values...)
+		if err != nil {
+			return errors.Wrap(err, "failed to insert into join table")
+		}
+	}
+	if o.R == nil {
+		o.R = &utteranceR{
+			Speakers: related,
+		}
+	} else {
+		o.R.Speakers = append(o.R.Speakers, related...)
+	}
+
+	for _, rel := range related {
+		if rel.R == nil {
+			rel.R = &speakerR{
+				Utterances: UtteranceSlice{o},
+			}
+		} else {
+			rel.R.Utterances = append(rel.R.Utterances, o)
+		}
+	}
+	return nil
+}
+
+// SetSpeakers removes all previously related items of the
+// utterance replacing them completely with the passed
+// in related items, optionally inserting them as new records.
+// Sets o.R.Utterances's Speakers accordingly.
+// Replaces o.R.Speakers with related.
+// Sets related.R.Utterances's Speakers accordingly.
+func (o *Utterance) SetSpeakers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Speaker) error {
+	query := "delete from \"utterance_speakers\" where \"utterance_id\" = ?"
+	values := []interface{}{o.ID}
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err := exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+
+	removeSpeakersFromUtterancesSlice(o, related)
+	if o.R != nil {
+		o.R.Speakers = nil
+	}
+
+	return o.AddSpeakers(ctx, exec, insert, related...)
+}
+
+// RemoveSpeakers relationships from objects passed in.
+// Removes related items from R.Speakers (uses pointer comparison, removal does not keep order)
+// Sets related.R.Utterances.
+func (o *Utterance) RemoveSpeakers(ctx context.Context, exec boil.ContextExecutor, related ...*Speaker) error {
+	if len(related) == 0 {
+		return nil
+	}
+
+	var err error
+	query := fmt.Sprintf(
+		"delete from \"utterance_speakers\" where \"utterance_id\" = ? and \"speaker_id\" in (%s)",
+		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
+	)
+	values := []interface{}{o.ID}
+	for _, rel := range related {
+		values = append(values, rel.ID)
+	}
+
+	if boil.IsDebug(ctx) {
+		writer := boil.DebugWriterFrom(ctx)
+		fmt.Fprintln(writer, query)
+		fmt.Fprintln(writer, values)
+	}
+	_, err = exec.ExecContext(ctx, query, values...)
+	if err != nil {
+		return errors.Wrap(err, "failed to remove relationships before set")
+	}
+	removeSpeakersFromUtterancesSlice(o, related)
+	if o.R == nil {
+		return nil
+	}
+
+	for _, rel := range related {
+		for i, ri := range o.R.Speakers {
+			if rel != ri {
+				continue
+			}
+
+			ln := len(o.R.Speakers)
+			if ln > 1 && i < ln-1 {
+				o.R.Speakers[i] = o.R.Speakers[ln-1]
+			}
+			o.R.Speakers = o.R.Speakers[:ln-1]
+			break
+		}
+	}
+
+	return nil
+}
+
+func removeSpeakersFromUtterancesSlice(o *Utterance, related []*Speaker) {
+	for _, rel := range related {
+		if rel.R == nil {
+			continue
+		}
+		for i, ri := range rel.R.Utterances {
+			if !queries.Equal(o.ID, ri.ID) {
+				continue
+			}
+
+			ln := len(rel.R.Utterances)
+			if ln > 1 && i < ln-1 {
+				rel.R.Utterances[i] = rel.R.Utterances[ln-1]
+			}
+			rel.R.Utterances = rel.R.Utterances[:ln-1]
+			break
+		}
+	}
 }
 
 // Utterances retrieves all the records using an executor.

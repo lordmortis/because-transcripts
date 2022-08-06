@@ -519,12 +519,19 @@ func testSpeakerToManyUtterances(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.SpeakerID, a.ID)
-	queries.Assign(&c.SpeakerID, a.ID)
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)", a.ID, b.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)", a.ID, c.ID)
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -535,10 +542,10 @@ func testSpeakerToManyUtterances(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.SpeakerID, b.SpeakerID) {
+		if queries.Equal(v.ID, b.ID) {
 			bFound = true
 		}
-		if queries.Equal(v.SpeakerID, c.SpeakerID) {
+		if queries.Equal(v.ID, c.ID) {
 			cFound = true
 		}
 	}
@@ -616,18 +623,11 @@ func testSpeakerToManyAddOpUtterances(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.ID, first.SpeakerID) {
-			t.Error("foreign key was wrong value", a.ID, first.SpeakerID)
+		if first.R.Speakers[0] != &a {
+			t.Error("relationship was not added properly to the slice")
 		}
-		if !queries.Equal(a.ID, second.SpeakerID) {
-			t.Error("foreign key was wrong value", a.ID, second.SpeakerID)
-		}
-
-		if first.R.Speaker != &a {
-			t.Error("relationship was not added properly to the foreign slice")
-		}
-		if second.R.Speaker != &a {
-			t.Error("relationship was not added properly to the foreign slice")
+		if second.R.Speakers[0] != &a {
+			t.Error("relationship was not added properly to the slice")
 		}
 
 		if a.R.Utterances[i*2] != first {
@@ -644,6 +644,165 @@ func testSpeakerToManyAddOpUtterances(t *testing.T) {
 		if want := int64((i + 1) * 2); count != want {
 			t.Error("want", want, "got", count)
 		}
+	}
+}
+
+func testSpeakerToManySetOpUtterances(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Speaker
+	var b, c, d, e Utterance
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Utterance{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err = a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+	if err = c.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.SetUtterances(ctx, tx, false, &b, &c)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.Utterances().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.SetUtterances(ctx, tx, true, &d, &e)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.Utterances().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	// The following checks cannot be implemented since we have no handle
+	// to these when we call Set(). Leaving them here as wishful thinking
+	// and to let people know there's dragons.
+	//
+	// if len(b.R.Speakers) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	// if len(c.R.Speakers) != 0 {
+	// 	t.Error("relationship was not removed properly from the slice")
+	// }
+	if d.R.Speakers[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+	if e.R.Speakers[0] != &a {
+		t.Error("relationship was not added properly to the slice")
+	}
+
+	if a.R.Utterances[0] != &d {
+		t.Error("relationship struct slice not set to correct value")
+	}
+	if a.R.Utterances[1] != &e {
+		t.Error("relationship struct slice not set to correct value")
+	}
+}
+
+func testSpeakerToManyRemoveOpUtterances(t *testing.T) {
+	var err error
+
+	ctx := context.Background()
+	tx := MustTx(boil.BeginTx(ctx, nil))
+	defer func() { _ = tx.Rollback() }()
+
+	var a Speaker
+	var b, c, d, e Utterance
+
+	seed := randomize.NewSeed()
+	if err = randomize.Struct(seed, &a, speakerDBTypes, false, strmangle.SetComplement(speakerPrimaryKeyColumns, speakerColumnsWithoutDefault)...); err != nil {
+		t.Fatal(err)
+	}
+	foreigners := []*Utterance{&b, &c, &d, &e}
+	for _, x := range foreigners {
+		if err = randomize.Struct(seed, x, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
+		t.Fatal(err)
+	}
+
+	err = a.AddUtterances(ctx, tx, true, foreigners...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err := a.Utterances().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 4 {
+		t.Error("count was wrong:", count)
+	}
+
+	err = a.RemoveUtterances(ctx, tx, foreigners[:2]...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	count, err = a.Utterances().Count(ctx, tx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if count != 2 {
+		t.Error("count was wrong:", count)
+	}
+
+	if len(b.R.Speakers) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if len(c.R.Speakers) != 0 {
+		t.Error("relationship was not removed properly from the slice")
+	}
+	if d.R.Speakers[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+	if e.R.Speakers[0] != &a {
+		t.Error("relationship was not added properly to the foreign struct")
+	}
+
+	if len(a.R.Utterances) != 2 {
+		t.Error("should have preserved two relationships")
+	}
+
+	// Removal doesn't do a stable deletion for performance so we have to flip the order
+	if a.R.Utterances[1] != &d {
+		t.Error("relationship to d should have been preserved")
+	}
+	if a.R.Utterances[0] != &e {
+		t.Error("relationship to e should have been preserved")
 	}
 }
 
