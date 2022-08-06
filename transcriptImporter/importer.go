@@ -92,7 +92,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 
 		if paralinguisticRegex.MatchString(line) {
 			utterance.IsParalinguistic = true
-			utterance.Utterance = line[1 : len(line)-2]
+			utterance.Utterance = line[1 : len(line)-1]
 		} else if spokenLineRegex.MatchString(line) {
 			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
 			if len(matches) != 1 || len(matches[0]) != 4 {

@@ -115,4 +115,13 @@ func (model *Utterance) fromDB(dbModel *datasource_raw.Utterance) {
 	} else {
 		model.Utterance = ""
 	}
+
+	if dbModel.R != nil && len(dbModel.R.Speakers) > 0 {
+		model.Speakers = make([]*Speaker, len(dbModel.R.Speakers))
+		for index, speaker := range dbModel.R.Speakers {
+			speakerModel := Speaker{source: model.source, dbModel: speaker}
+			speakerModel.fromDB(speaker)
+			model.Speakers[index] = &speakerModel
+		}
+	}
 }

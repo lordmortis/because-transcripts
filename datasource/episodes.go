@@ -2,6 +2,7 @@ package datasource
 
 import (
 	"context"
+	"database/sql"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"time"
@@ -25,7 +26,7 @@ type Episode struct {
 	source  *DataSource
 }
 
-func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int) ([]Episode, int64, error) {
+func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int) ([]*Episode, int64, error) {
 	var query []qm.QueryMod
 	count, err := datasource_raw.Episodes(query...).Count(ctx, source.connection)
 	if err != nil {
@@ -42,14 +43,28 @@ func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int
 		return nil, count, err
 	}
 
-	models := make([]Episode, len(dbModels))
+	models := make([]*Episode, len(dbModels))
 	for index := range dbModels {
-		model := Episode{source: source}
+		model := &Episode{source: source}
 		model.fromDB(dbModels[index])
 		models[index] = model
 	}
 
 	return models, count, nil
+}
+
+func (source *DataSource) EpisodeWithId(ctx context.Context, id uuid.UUID) (*Episode, error) {
+	dbModel, err := datasource_raw.FindEpisode(ctx, source.connection, id.Bytes())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	model := Episode{source: source}
+	model.fromDB(dbModel)
+	return &model, nil
 }
 
 func (model *Episode) Update(ctx context.Context) (bool, error) {
@@ -123,6 +138,38 @@ func (model *Episode) NewUtterance() *Utterance {
 		SequenceNo: -1,
 		Speakers:   []*Speaker{},
 	}
+}
+
+func (model *Episode) Utterances(ctx context.Context, limit int, offset int, includeSpeakers bool) ([]Utterance, int64, error) {
+	var query []qm.QueryMod
+
+	count, err := model.dbModel.Utterances().Count(ctx, model.source.connection)
+	if err != nil {
+		return nil, -1, err
+	}
+
+	if limit > 0 && offset >= 0 {
+		query = append(query, qm.Limit(limit))
+		query = append(query, qm.Offset(offset))
+	}
+
+	if includeSpeakers {
+		query = append(query, qm.Load("Speakers"))
+	}
+
+	dbModels, err := model.dbModel.Utterances(query...).All(ctx, model.source.connection)
+	if err != nil {
+		return nil, count, err
+	}
+
+	models := make([]Utterance, len(dbModels))
+	for index := range dbModels {
+		model := Utterance{source: model.source}
+		model.fromDB(dbModels[index])
+		models[index] = model
+	}
+
+	return models, count, nil
 }
 
 func (model *Episode) fromDB(dbModel *datasource_raw.Episode) {

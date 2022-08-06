@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Episode {{ .episode.Number }} - {{ .episode.Name }}</title>
+    <style>
+        span.speaker {
+            color: blue;
+            padding: 0 5px 5px 0;
+        }
+
+        span.paralinguistic {
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+<h1>{{ .episode.Number }} - {{ .episode.Name }}</h1>
+<p>{{ .count }} lines</p>
+<ul>
+    {{ range .utterances }}
+    <li>
+        {{ range .Speakers }}<span class="speaker"><a href="/speaker/{{.ID}}">{{ .Name }}</a></span>{{ end }}
+        {{ if .IsParalinguistic }}
+        <span class="paralinguistic">
+        {{ end }}
+        {{ .Utterance }}
+        {{ if .IsParalinguistic }}
+        </span>
+        {{ end }}
+    </li>
+    {{ end }}
+</ul>
+</body>
+</html>
