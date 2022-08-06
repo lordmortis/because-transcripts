@@ -91,28 +91,6 @@ func (model *Episode) Update(ctx context.Context) (bool, error) {
 				model.dbModel.Number = null.Int64From(int64(model.Number))
 			}
 		}
-
-		if insert {
-			err := model.dbModel.Insert(ctx, model.source.connection, boil.Infer())
-			if err != nil {
-				return false, err
-			}
-		} else {
-			rows, err := model.dbModel.Update(ctx, model.source.connection, boil.Infer())
-			if err != nil {
-				return false, err
-			}
-
-			if rows == 0 {
-				return false, nil
-			}
-		}
-
-		if err := model.dbModel.Reload(ctx, model.source.connection); err != nil {
-			return false, err
-		}
-		model.fromDB(model.dbModel)
-		return true, nil
 	}
 
 	if insert {

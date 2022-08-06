@@ -3,6 +3,7 @@ module BecauseLanguageBot
 go 1.18
 
 require (
+	github.com/alphadose/zenq/v2 v2.7.1
 	github.com/bwmarrin/discordgo v0.25.0
 	github.com/friendsofgo/errors v0.9.2
 	github.com/fsnotify/fsnotify v1.5.4

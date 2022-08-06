@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/friendsofgo/errors"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -24,51 +23,81 @@ import (
 
 // Speaker is an object representing the database table.
 type Speaker struct {
-	ID        []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Name      null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
-	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID             []byte    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	TranscriptName string    `boil:"transcript_name" json:"transcript_name" toml:"transcript_name" yaml:"transcript_name"`
+	Name           string    `boil:"name" json:"name" toml:"name" yaml:"name"`
+	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt      time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *speakerR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L speakerL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var SpeakerColumns = struct {
-	ID        string
-	Name      string
-	CreatedAt string
-	UpdatedAt string
+	ID             string
+	TranscriptName string
+	Name           string
+	CreatedAt      string
+	UpdatedAt      string
 }{
-	ID:        "id",
-	Name:      "name",
-	CreatedAt: "created_at",
-	UpdatedAt: "updated_at",
+	ID:             "id",
+	TranscriptName: "transcript_name",
+	Name:           "name",
+	CreatedAt:      "created_at",
+	UpdatedAt:      "updated_at",
 }
 
 var SpeakerTableColumns = struct {
-	ID        string
-	Name      string
-	CreatedAt string
-	UpdatedAt string
+	ID             string
+	TranscriptName string
+	Name           string
+	CreatedAt      string
+	UpdatedAt      string
 }{
-	ID:        "speaker.id",
-	Name:      "speaker.name",
-	CreatedAt: "speaker.created_at",
-	UpdatedAt: "speaker.updated_at",
+	ID:             "speaker.id",
+	TranscriptName: "speaker.transcript_name",
+	Name:           "speaker.name",
+	CreatedAt:      "speaker.created_at",
+	UpdatedAt:      "speaker.updated_at",
 }
 
 // Generated where
 
+type whereHelperstring struct{ field string }
+
+func (w whereHelperstring) EQ(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperstring) NEQ(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperstring) LT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperstring) LTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperstring) GT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperstring) IN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
+
 var SpeakerWhere = struct {
-	ID        whereHelper__byte
-	Name      whereHelpernull_String
-	CreatedAt whereHelpertime_Time
-	UpdatedAt whereHelpertime_Time
+	ID             whereHelper__byte
+	TranscriptName whereHelperstring
+	Name           whereHelperstring
+	CreatedAt      whereHelpertime_Time
+	UpdatedAt      whereHelpertime_Time
 }{
-	ID:        whereHelper__byte{field: "\"speaker\".\"id\""},
-	Name:      whereHelpernull_String{field: "\"speaker\".\"name\""},
-	CreatedAt: whereHelpertime_Time{field: "\"speaker\".\"created_at\""},
-	UpdatedAt: whereHelpertime_Time{field: "\"speaker\".\"updated_at\""},
+	ID:             whereHelper__byte{field: "\"speaker\".\"id\""},
+	TranscriptName: whereHelperstring{field: "\"speaker\".\"transcript_name\""},
+	Name:           whereHelperstring{field: "\"speaker\".\"name\""},
+	CreatedAt:      whereHelpertime_Time{field: "\"speaker\".\"created_at\""},
+	UpdatedAt:      whereHelpertime_Time{field: "\"speaker\".\"updated_at\""},
 }
 
 // SpeakerRels is where relationship names are stored.
@@ -99,9 +128,9 @@ func (r *speakerR) GetUtterances() UtteranceSlice {
 type speakerL struct{}
 
 var (
-	speakerAllColumns            = []string{"id", "name", "created_at", "updated_at"}
-	speakerColumnsWithoutDefault = []string{"id", "created_at", "updated_at"}
-	speakerColumnsWithDefault    = []string{"name"}
+	speakerAllColumns            = []string{"id", "transcript_name", "name", "created_at", "updated_at"}
+	speakerColumnsWithoutDefault = []string{"id", "transcript_name", "name", "created_at", "updated_at"}
+	speakerColumnsWithDefault    = []string{}
 	speakerPrimaryKeyColumns     = []string{"id"}
 	speakerGeneratedColumns      = []string{}
 )

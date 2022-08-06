@@ -6,7 +6,7 @@ CREATE TABLE "podcast" (
 CREATE TABLE "episodes" (
     id BLOB NOT NULL PRIMARY KEY,
     podcast_id BLOB NOT NULL,
-    number integer,
+    number INTEGER,
     name TEXT,
     aired_at DATE NOT NULL,
     patreon_only INTEGER,
@@ -18,17 +18,20 @@ CREATE INDEX episode_order ON episodes(number);
 
 CREATE TABLE "speaker" (
     id BLOB NOT NULL PRIMARY KEY,
-    name TEXT,
+    transcript_name TEXT NOT NULL,
+    name TEXT NOT NULL,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
 );
 
 CREATE TABLE "utterances" (
     id BLOB NOT NULL PRIMARY KEY,
-    speaker_id BLOB NOT NULL,
     episode_id BLOB NOT NULL,
-    start_time INTEGER NOT NULL,
-    end_time INTEGER NOT NULL,
+    speaker_id BLOB,
+    sequence_no INTEGER NOT NULL,
+    is_paralinguistic INTEGER NOT NULL,
+    start_time INTEGER,
+    end_time INTEGER,
     utterance TEXT,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
@@ -36,7 +39,8 @@ CREATE TABLE "utterances" (
     CONSTRAINT episode_id_check FOREIGN KEY (episode_id) REFERENCES episodes (id)
 );
 
-CREATE INDEX utterance_order ON utterances(start_time);
+CREATE INDEX utterance_order ON utterances(sequence_no);
+CREATE INDEX utterance_time_order ON utterances(start_time);
 CREATE INDEX utterances_by_episode ON utterances(episode_id);
 CREATE INDEX utterances_by_speaker ON utterances(speaker_id);
 
