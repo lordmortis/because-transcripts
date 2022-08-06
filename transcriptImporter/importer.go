@@ -76,6 +76,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	scanner := bufio.NewScanner(fileDesc)
 	lineindex := 0
 
+	groupUtterances := make([]*datasource.Utterance, 0)
 	var currentSpeaker *datasource.Speaker
 	currentSpeaker = nil
 
@@ -85,14 +86,24 @@ func doImport(filePath string, source *datasource.DataSource) error {
 			continue
 		}
 
+		utterance := episode.NewUtterance()
+		utterance.SequenceNo = lineindex
+		utterance.Utterance = line
+
 		if paralinguisticRegex.MatchString(line) {
-			fmt.Printf("Paralinguistic: %s\n", line)
+			utterance.IsParalinguistic = true
+			utterance.Utterance = line[1 : len(line)-2]
 		} else if spokenLineRegex.MatchString(line) {
 			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return errors.New(fmt.Sprintf("could not import speaker on line %d from file '%s'", lineindex, filePath))
 			}
 			transcriptName := matches[0][2]
+
+			if strings.EqualFold(transcriptName, "all") {
+				groupUtterances = append(groupUtterances, utterance)
+			}
+
 			currentSpeaker, err = source.SpeakerWithTranscriptName(ctx, transcriptName)
 			if err != nil {
 				errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
@@ -109,11 +120,22 @@ func doImport(filePath string, source *datasource.DataSource) error {
 					return errors.Because(err, nil, errorString)
 				}
 			}
-
-			line := matches[0][3]
-			_ = line
+			utterance.Speakers = []*datasource.Speaker{currentSpeaker}
+			utterance.Utterance = matches[0][3]
 		} else {
-			fmt.Printf("Other line: %s\n", line)
+			utterance.Speakers = []*datasource.Speaker{currentSpeaker}
+			utterance.Utterance = line
+		}
+
+		success, err := utterance.Update(ctx)
+		if err != nil {
+			errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+			return errors.Because(err, nil, errorString)
+		}
+
+		if !success {
+			errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+			return errors.New(errorString)
 		}
 
 		lineindex++

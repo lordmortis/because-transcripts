@@ -116,6 +116,15 @@ func (model *Episode) Update(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+func (model *Episode) NewUtterance() *Utterance {
+	return &Utterance{
+		source:     model.source,
+		Episode:    model,
+		SequenceNo: -1,
+		Speakers:   []*Speaker{},
+	}
+}
+
 func (model *Episode) fromDB(dbModel *datasource_raw.Episode) {
 	model.dbModel = dbModel
 	model.uuid = UUIDFromBytes(model.dbModel.ID)
