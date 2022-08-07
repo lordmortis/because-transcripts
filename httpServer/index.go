@@ -13,23 +13,14 @@ import (
 
 func handleIndex(ctx *gin.Context) {
 	dataSource := datasource.GetSourceFromContext(ctx)
-	episodes, _, err := dataSource.EpisodesAll(ctx, 0, 0)
+	episodes, _, err := dataSource.EpisodesAll(ctx, -1, -1, false)
 	if err != nil {
 		os.Stderr.WriteString(fmt.Sprintf("Unable to read episodes: %s", err))
 		ctx.AbortWithError(http.StatusInternalServerError, errors.New("unable to read episodes"))
 		return
 	}
 
-	templateEpisodes := make([]gin.H, len(episodes))
-	for index, episode := range episodes {
-		templateEpisodes[index] = gin.H{
-			"id":    episode.ID,
-			"name":  episode.Name,
-			"aired": episode.Date.String(),
-		}
-	}
-
-	data := gin.H{"Episodes": templateEpisodes}
+	data := gin.H{"episodes": episodes}
 
 	ctx.HTML(http.StatusOK, "index.html", data)
 }

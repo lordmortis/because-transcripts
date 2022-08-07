@@ -21,24 +21,24 @@ var (
 	_ = queries.Equal
 )
 
-func testEpisodes(t *testing.T) {
+func testTurns(t *testing.T) {
 	t.Parallel()
 
-	query := Episodes()
+	query := Turns()
 
 	if query.Query == nil {
 		t.Error("expected a query, got nothing")
 	}
 }
 
-func testEpisodesDelete(t *testing.T) {
+func testTurnsDelete(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -54,7 +54,7 @@ func testEpisodesDelete(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -64,14 +64,14 @@ func testEpisodesDelete(t *testing.T) {
 	}
 }
 
-func testEpisodesQueryDeleteAll(t *testing.T) {
+func testTurnsQueryDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -81,13 +81,13 @@ func testEpisodesQueryDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	if rowsAff, err := Episodes().DeleteAll(ctx, tx); err != nil {
+	if rowsAff, err := Turns().DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -97,14 +97,14 @@ func testEpisodesQueryDeleteAll(t *testing.T) {
 	}
 }
 
-func testEpisodesSliceDeleteAll(t *testing.T) {
+func testTurnsSliceDeleteAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -114,7 +114,7 @@ func testEpisodesSliceDeleteAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := EpisodeSlice{o}
+	slice := TurnSlice{o}
 
 	if rowsAff, err := slice.DeleteAll(ctx, tx); err != nil {
 		t.Error(err)
@@ -122,7 +122,7 @@ func testEpisodesSliceDeleteAll(t *testing.T) {
 		t.Error("should only have deleted one row, but affected:", rowsAff)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -132,14 +132,14 @@ func testEpisodesSliceDeleteAll(t *testing.T) {
 	}
 }
 
-func testEpisodesExists(t *testing.T) {
+func testTurnsExists(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -149,23 +149,23 @@ func testEpisodesExists(t *testing.T) {
 		t.Error(err)
 	}
 
-	e, err := EpisodeExists(ctx, tx, o.ID)
+	e, err := TurnExists(ctx, tx, o.ID)
 	if err != nil {
-		t.Errorf("Unable to check if Episode exists: %s", err)
+		t.Errorf("Unable to check if Turn exists: %s", err)
 	}
 	if !e {
-		t.Errorf("Expected EpisodeExists to return true, but got false.")
+		t.Errorf("Expected TurnExists to return true, but got false.")
 	}
 }
 
-func testEpisodesFind(t *testing.T) {
+func testTurnsFind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -175,24 +175,24 @@ func testEpisodesFind(t *testing.T) {
 		t.Error(err)
 	}
 
-	episodeFound, err := FindEpisode(ctx, tx, o.ID)
+	turnFound, err := FindTurn(ctx, tx, o.ID)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if episodeFound == nil {
+	if turnFound == nil {
 		t.Error("want a record, got nil")
 	}
 }
 
-func testEpisodesBind(t *testing.T) {
+func testTurnsBind(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -202,19 +202,19 @@ func testEpisodesBind(t *testing.T) {
 		t.Error(err)
 	}
 
-	if err = Episodes().Bind(ctx, tx, o); err != nil {
+	if err = Turns().Bind(ctx, tx, o); err != nil {
 		t.Error(err)
 	}
 }
 
-func testEpisodesOne(t *testing.T) {
+func testTurnsOne(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -224,38 +224,38 @@ func testEpisodesOne(t *testing.T) {
 		t.Error(err)
 	}
 
-	if x, err := Episodes().One(ctx, tx); err != nil {
+	if x, err := Turns().One(ctx, tx); err != nil {
 		t.Error(err)
 	} else if x == nil {
 		t.Error("expected to get a non nil record")
 	}
 }
 
-func testEpisodesAll(t *testing.T) {
+func testTurnsAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	episodeOne := &Episode{}
-	episodeTwo := &Episode{}
-	if err = randomize.Struct(seed, episodeOne, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	turnOne := &Turn{}
+	turnTwo := &Turn{}
+	if err = randomize.Struct(seed, turnOne, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
-	if err = randomize.Struct(seed, episodeTwo, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, turnTwo, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = episodeOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = turnOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = episodeTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = turnTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	slice, err := Episodes().All(ctx, tx)
+	slice, err := Turns().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -265,31 +265,31 @@ func testEpisodesAll(t *testing.T) {
 	}
 }
 
-func testEpisodesCount(t *testing.T) {
+func testTurnsCount(t *testing.T) {
 	t.Parallel()
 
 	var err error
 	seed := randomize.NewSeed()
-	episodeOne := &Episode{}
-	episodeTwo := &Episode{}
-	if err = randomize.Struct(seed, episodeOne, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	turnOne := &Turn{}
+	turnTwo := &Turn{}
+	if err = randomize.Struct(seed, turnOne, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
-	if err = randomize.Struct(seed, episodeTwo, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, turnTwo, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = episodeOne.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = turnOne.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
-	if err = episodeTwo.Insert(ctx, tx, boil.Infer()); err != nil {
+	if err = turnTwo.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Error(err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -299,155 +299,155 @@ func testEpisodesCount(t *testing.T) {
 	}
 }
 
-func episodeBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnBeforeInsertHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnAfterInsertHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnAfterSelectHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnBeforeUpdateHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnAfterUpdateHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnBeforeDeleteHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnAfterDeleteHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnBeforeUpsertHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func episodeAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *Episode) error {
-	*o = Episode{}
+func turnAfterUpsertHook(ctx context.Context, e boil.ContextExecutor, o *Turn) error {
+	*o = Turn{}
 	return nil
 }
 
-func testEpisodesHooks(t *testing.T) {
+func testTurnsHooks(t *testing.T) {
 	t.Parallel()
 
 	var err error
 
 	ctx := context.Background()
-	empty := &Episode{}
-	o := &Episode{}
+	empty := &Turn{}
+	o := &Turn{}
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, o, episodeDBTypes, false); err != nil {
-		t.Errorf("Unable to randomize Episode object: %s", err)
+	if err = randomize.Struct(seed, o, turnDBTypes, false); err != nil {
+		t.Errorf("Unable to randomize Turn object: %s", err)
 	}
 
-	AddEpisodeHook(boil.BeforeInsertHook, episodeBeforeInsertHook)
+	AddTurnHook(boil.BeforeInsertHook, turnBeforeInsertHook)
 	if err = o.doBeforeInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeInsertHook function to empty object, but got: %#v", o)
 	}
-	episodeBeforeInsertHooks = []EpisodeHook{}
+	turnBeforeInsertHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.AfterInsertHook, episodeAfterInsertHook)
+	AddTurnHook(boil.AfterInsertHook, turnAfterInsertHook)
 	if err = o.doAfterInsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterInsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterInsertHook function to empty object, but got: %#v", o)
 	}
-	episodeAfterInsertHooks = []EpisodeHook{}
+	turnAfterInsertHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.AfterSelectHook, episodeAfterSelectHook)
+	AddTurnHook(boil.AfterSelectHook, turnAfterSelectHook)
 	if err = o.doAfterSelectHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterSelectHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterSelectHook function to empty object, but got: %#v", o)
 	}
-	episodeAfterSelectHooks = []EpisodeHook{}
+	turnAfterSelectHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.BeforeUpdateHook, episodeBeforeUpdateHook)
+	AddTurnHook(boil.BeforeUpdateHook, turnBeforeUpdateHook)
 	if err = o.doBeforeUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpdateHook function to empty object, but got: %#v", o)
 	}
-	episodeBeforeUpdateHooks = []EpisodeHook{}
+	turnBeforeUpdateHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.AfterUpdateHook, episodeAfterUpdateHook)
+	AddTurnHook(boil.AfterUpdateHook, turnAfterUpdateHook)
 	if err = o.doAfterUpdateHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpdateHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpdateHook function to empty object, but got: %#v", o)
 	}
-	episodeAfterUpdateHooks = []EpisodeHook{}
+	turnAfterUpdateHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.BeforeDeleteHook, episodeBeforeDeleteHook)
+	AddTurnHook(boil.BeforeDeleteHook, turnBeforeDeleteHook)
 	if err = o.doBeforeDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeDeleteHook function to empty object, but got: %#v", o)
 	}
-	episodeBeforeDeleteHooks = []EpisodeHook{}
+	turnBeforeDeleteHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.AfterDeleteHook, episodeAfterDeleteHook)
+	AddTurnHook(boil.AfterDeleteHook, turnAfterDeleteHook)
 	if err = o.doAfterDeleteHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterDeleteHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterDeleteHook function to empty object, but got: %#v", o)
 	}
-	episodeAfterDeleteHooks = []EpisodeHook{}
+	turnAfterDeleteHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.BeforeUpsertHook, episodeBeforeUpsertHook)
+	AddTurnHook(boil.BeforeUpsertHook, turnBeforeUpsertHook)
 	if err = o.doBeforeUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doBeforeUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected BeforeUpsertHook function to empty object, but got: %#v", o)
 	}
-	episodeBeforeUpsertHooks = []EpisodeHook{}
+	turnBeforeUpsertHooks = []TurnHook{}
 
-	AddEpisodeHook(boil.AfterUpsertHook, episodeAfterUpsertHook)
+	AddTurnHook(boil.AfterUpsertHook, turnAfterUpsertHook)
 	if err = o.doAfterUpsertHooks(ctx, nil); err != nil {
 		t.Errorf("Unable to execute doAfterUpsertHooks: %s", err)
 	}
 	if !reflect.DeepEqual(o, empty) {
 		t.Errorf("Expected AfterUpsertHook function to empty object, but got: %#v", o)
 	}
-	episodeAfterUpsertHooks = []EpisodeHook{}
+	turnAfterUpsertHooks = []TurnHook{}
 }
 
-func testEpisodesInsert(t *testing.T) {
+func testTurnsInsert(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -457,7 +457,7 @@ func testEpisodesInsert(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -467,24 +467,24 @@ func testEpisodesInsert(t *testing.T) {
 	}
 }
 
-func testEpisodesInsertWhitelist(t *testing.T) {
+func testTurnsInsertWhitelist(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
-	if err = o.Insert(ctx, tx, boil.Whitelist(episodeColumnsWithoutDefault...)); err != nil {
+	if err = o.Insert(ctx, tx, boil.Whitelist(turnColumnsWithoutDefault...)); err != nil {
 		t.Error(err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -494,33 +494,33 @@ func testEpisodesInsertWhitelist(t *testing.T) {
 	}
 }
 
-func testEpisodeToManyTurns(t *testing.T) {
+func testTurnToManyUtterances(t *testing.T) {
 	var err error
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a Episode
-	var b, c Turn
+	var a Turn
+	var b, c Utterance
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, &a, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	if err := a.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	if err = randomize.Struct(seed, &b, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+	if err = randomize.Struct(seed, &b, utteranceDBTypes, false, utteranceColumnsWithDefault...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &c, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+	if err = randomize.Struct(seed, &c, utteranceDBTypes, false, utteranceColumnsWithDefault...); err != nil {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.EpisodeID, a.ID)
-	queries.Assign(&c.EpisodeID, a.ID)
+	queries.Assign(&b.TurnID, a.ID)
+	queries.Assign(&c.TurnID, a.ID)
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -528,17 +528,17 @@ func testEpisodeToManyTurns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	check, err := a.Turns().All(ctx, tx)
+	check, err := a.Utterances().All(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.EpisodeID, b.EpisodeID) {
+		if queries.Equal(v.TurnID, b.TurnID) {
 			bFound = true
 		}
-		if queries.Equal(v.EpisodeID, c.EpisodeID) {
+		if queries.Equal(v.TurnID, c.TurnID) {
 			cFound = true
 		}
 	}
@@ -550,19 +550,19 @@ func testEpisodeToManyTurns(t *testing.T) {
 		t.Error("expected to find c")
 	}
 
-	slice := EpisodeSlice{&a}
-	if err = a.L.LoadTurns(ctx, tx, false, (*[]*Episode)(&slice), nil); err != nil {
+	slice := TurnSlice{&a}
+	if err = a.L.LoadUtterances(ctx, tx, false, (*[]*Turn)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.Turns); got != 2 {
+	if got := len(a.R.Utterances); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
-	a.R.Turns = nil
-	if err = a.L.LoadTurns(ctx, tx, true, &a, nil); err != nil {
+	a.R.Utterances = nil
+	if err = a.L.LoadUtterances(ctx, tx, true, &a, nil); err != nil {
 		t.Fatal(err)
 	}
-	if got := len(a.R.Turns); got != 2 {
+	if got := len(a.R.Utterances); got != 2 {
 		t.Error("number of eager loaded records wrong, got:", got)
 	}
 
@@ -571,23 +571,23 @@ func testEpisodeToManyTurns(t *testing.T) {
 	}
 }
 
-func testEpisodeToManyAddOpTurns(t *testing.T) {
+func testTurnToManyAddOpUtterances(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a Episode
-	var b, c, d, e Turn
+	var a Turn
+	var b, c, d, e Utterance
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &a, turnDBTypes, false, strmangle.SetComplement(turnPrimaryKeyColumns, turnColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	foreigners := []*Turn{&b, &c, &d, &e}
+	foreigners := []*Utterance{&b, &c, &d, &e}
 	for _, x := range foreigners {
-		if err = randomize.Struct(seed, x, turnDBTypes, false, strmangle.SetComplement(turnPrimaryKeyColumns, turnColumnsWithoutDefault)...); err != nil {
+		if err = randomize.Struct(seed, x, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -602,13 +602,13 @@ func testEpisodeToManyAddOpTurns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	foreignersSplitByInsertion := [][]*Turn{
+	foreignersSplitByInsertion := [][]*Utterance{
 		{&b, &c},
 		{&d, &e},
 	}
 
 	for i, x := range foreignersSplitByInsertion {
-		err = a.AddTurns(ctx, tx, i != 0, x...)
+		err = a.AddUtterances(ctx, tx, i != 0, x...)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -616,28 +616,28 @@ func testEpisodeToManyAddOpTurns(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.ID, first.EpisodeID) {
-			t.Error("foreign key was wrong value", a.ID, first.EpisodeID)
+		if !queries.Equal(a.ID, first.TurnID) {
+			t.Error("foreign key was wrong value", a.ID, first.TurnID)
 		}
-		if !queries.Equal(a.ID, second.EpisodeID) {
-			t.Error("foreign key was wrong value", a.ID, second.EpisodeID)
+		if !queries.Equal(a.ID, second.TurnID) {
+			t.Error("foreign key was wrong value", a.ID, second.TurnID)
 		}
 
-		if first.R.Episode != &a {
+		if first.R.Turn != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
-		if second.R.Episode != &a {
+		if second.R.Turn != &a {
 			t.Error("relationship was not added properly to the foreign slice")
 		}
 
-		if a.R.Turns[i*2] != first {
+		if a.R.Utterances[i*2] != first {
 			t.Error("relationship struct slice not set to correct value")
 		}
-		if a.R.Turns[i*2+1] != second {
+		if a.R.Utterances[i*2+1] != second {
 			t.Error("relationship struct slice not set to correct value")
 		}
 
-		count, err := a.Turns().Count(ctx, tx)
+		count, err := a.Utterances().Count(ctx, tx)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -646,32 +646,32 @@ func testEpisodeToManyAddOpTurns(t *testing.T) {
 		}
 	}
 }
-func testEpisodeToOnePodcastUsingPodcast(t *testing.T) {
+func testTurnToOneEpisodeUsingEpisode(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var local Episode
-	var foreign Podcast
+	var local Turn
+	var foreign Episode
 
 	seed := randomize.NewSeed()
-	if err := randomize.Struct(seed, &local, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err := randomize.Struct(seed, &local, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
-	if err := randomize.Struct(seed, &foreign, podcastDBTypes, false, podcastColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Podcast struct: %s", err)
+	if err := randomize.Struct(seed, &foreign, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Episode struct: %s", err)
 	}
 
 	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.PodcastID, foreign.ID)
+	queries.Assign(&local.EpisodeID, foreign.ID)
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	check, err := local.Podcast().One(ctx, tx)
+	check, err := local.Episode().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -680,41 +680,41 @@ func testEpisodeToOnePodcastUsingPodcast(t *testing.T) {
 		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
 	}
 
-	slice := EpisodeSlice{&local}
-	if err = local.L.LoadPodcast(ctx, tx, false, (*[]*Episode)(&slice), nil); err != nil {
+	slice := TurnSlice{&local}
+	if err = local.L.LoadEpisode(ctx, tx, false, (*[]*Turn)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.Podcast == nil {
+	if local.R.Episode == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.Podcast = nil
-	if err = local.L.LoadPodcast(ctx, tx, true, &local, nil); err != nil {
+	local.R.Episode = nil
+	if err = local.L.LoadEpisode(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.Podcast == nil {
+	if local.R.Episode == nil {
 		t.Error("struct should have been eager loaded")
 	}
 }
 
-func testEpisodeToOneSetOpPodcastUsingPodcast(t *testing.T) {
+func testTurnToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
-	var a Episode
-	var b, c Podcast
+	var a Turn
+	var b, c Episode
 
 	seed := randomize.NewSeed()
-	if err = randomize.Struct(seed, &a, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &a, turnDBTypes, false, strmangle.SetComplement(turnPrimaryKeyColumns, turnColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &b, podcastDBTypes, false, strmangle.SetComplement(podcastPrimaryKeyColumns, podcastColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &b, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &c, podcastDBTypes, false, strmangle.SetComplement(podcastPrimaryKeyColumns, podcastColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &c, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 
@@ -725,44 +725,44 @@ func testEpisodeToOneSetOpPodcastUsingPodcast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i, x := range []*Podcast{&b, &c} {
-		err = a.SetPodcast(ctx, tx, i != 0, x)
+	for i, x := range []*Episode{&b, &c} {
+		err = a.SetEpisode(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.Podcast != x {
+		if a.R.Episode != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
-		if x.R.Episodes[0] != &a {
+		if x.R.Turns[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.PodcastID, x.ID) {
-			t.Error("foreign key was wrong value", a.PodcastID)
+		if !queries.Equal(a.EpisodeID, x.ID) {
+			t.Error("foreign key was wrong value", a.EpisodeID)
 		}
 
-		zero := reflect.Zero(reflect.TypeOf(a.PodcastID))
-		reflect.Indirect(reflect.ValueOf(&a.PodcastID)).Set(zero)
+		zero := reflect.Zero(reflect.TypeOf(a.EpisodeID))
+		reflect.Indirect(reflect.ValueOf(&a.EpisodeID)).Set(zero)
 
 		if err = a.Reload(ctx, tx); err != nil {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.PodcastID, x.ID) {
-			t.Error("foreign key was wrong value", a.PodcastID, x.ID)
+		if !queries.Equal(a.EpisodeID, x.ID) {
+			t.Error("foreign key was wrong value", a.EpisodeID, x.ID)
 		}
 	}
 }
 
-func testEpisodesReload(t *testing.T) {
+func testTurnsReload(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -777,14 +777,14 @@ func testEpisodesReload(t *testing.T) {
 	}
 }
 
-func testEpisodesReloadAll(t *testing.T) {
+func testTurnsReloadAll(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -794,21 +794,21 @@ func testEpisodesReloadAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice := EpisodeSlice{o}
+	slice := TurnSlice{o}
 
 	if err = slice.ReloadAll(ctx, tx); err != nil {
 		t.Error(err)
 	}
 }
 
-func testEpisodesSelect(t *testing.T) {
+func testTurnsSelect(t *testing.T) {
 	t.Parallel()
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -818,7 +818,7 @@ func testEpisodesSelect(t *testing.T) {
 		t.Error(err)
 	}
 
-	slice, err := Episodes().All(ctx, tx)
+	slice, err := Turns().All(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -829,25 +829,25 @@ func testEpisodesSelect(t *testing.T) {
 }
 
 var (
-	episodeDBTypes = map[string]string{`ID`: `BLOB`, `PodcastID`: `BLOB`, `Number`: `INTEGER`, `Name`: `TEXT`, `AiredAt`: `DATE`, `PatreonOnly`: `INTEGER`}
-	_              = bytes.MinRead
+	turnDBTypes = map[string]string{`ID`: `BLOB`, `EpisodeID`: `BLOB`, `SequenceNo`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	_           = bytes.MinRead
 )
 
-func testEpisodesUpdate(t *testing.T) {
+func testTurnsUpdate(t *testing.T) {
 	t.Parallel()
 
-	if 0 == len(episodePrimaryKeyColumns) {
+	if 0 == len(turnPrimaryKeyColumns) {
 		t.Skip("Skipping table with no primary key columns")
 	}
-	if len(episodeAllColumns) == len(episodePrimaryKeyColumns) {
+	if len(turnAllColumns) == len(turnPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -857,7 +857,7 @@ func testEpisodesUpdate(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -866,8 +866,8 @@ func testEpisodesUpdate(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodePrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	if rowsAff, err := o.Update(ctx, tx, boil.Infer()); err != nil {
@@ -877,18 +877,18 @@ func testEpisodesUpdate(t *testing.T) {
 	}
 }
 
-func testEpisodesSliceUpdateAll(t *testing.T) {
+func testTurnsSliceUpdateAll(t *testing.T) {
 	t.Parallel()
 
-	if len(episodeAllColumns) == len(episodePrimaryKeyColumns) {
+	if len(turnAllColumns) == len(turnPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
-	o := &Episode{}
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := &Turn{}
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
@@ -898,7 +898,7 @@ func testEpisodesSliceUpdateAll(t *testing.T) {
 		t.Error(err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -907,18 +907,18 @@ func testEpisodesSliceUpdateAll(t *testing.T) {
 		t.Error("want one record, got:", count)
 	}
 
-	if err = randomize.Struct(seed, o, episodeDBTypes, true, episodePrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, o, turnDBTypes, true, turnPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	// Remove Primary keys and unique columns from what we plan to update
 	var fields []string
-	if strmangle.StringSliceMatch(episodeAllColumns, episodePrimaryKeyColumns) {
-		fields = episodeAllColumns
+	if strmangle.StringSliceMatch(turnAllColumns, turnPrimaryKeyColumns) {
+		fields = turnAllColumns
 	} else {
 		fields = strmangle.SetComplement(
-			episodeAllColumns,
-			episodePrimaryKeyColumns,
+			turnAllColumns,
+			turnPrimaryKeyColumns,
 		)
 	}
 
@@ -936,7 +936,7 @@ func testEpisodesSliceUpdateAll(t *testing.T) {
 		}
 	}
 
-	slice := EpisodeSlice{o}
+	slice := TurnSlice{o}
 	if rowsAff, err := slice.UpdateAll(ctx, tx, updateMap); err != nil {
 		t.Error(err)
 	} else if rowsAff != 1 {
@@ -944,28 +944,28 @@ func testEpisodesSliceUpdateAll(t *testing.T) {
 	}
 }
 
-func testEpisodesUpsert(t *testing.T) {
+func testTurnsUpsert(t *testing.T) {
 	t.Parallel()
-	if len(episodeAllColumns) == len(episodePrimaryKeyColumns) {
+	if len(turnAllColumns) == len(turnPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
 
 	seed := randomize.NewSeed()
 	var err error
 	// Attempt the INSERT side of an UPSERT
-	o := Episode{}
-	if err = randomize.Struct(seed, &o, episodeDBTypes, true); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	o := Turn{}
+	if err = randomize.Struct(seed, &o, turnDBTypes, true); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 	if err = o.Upsert(ctx, tx, false, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert Episode: %s", err)
+		t.Errorf("Unable to upsert Turn: %s", err)
 	}
 
-	count, err := Episodes().Count(ctx, tx)
+	count, err := Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}
@@ -974,15 +974,15 @@ func testEpisodesUpsert(t *testing.T) {
 	}
 
 	// Attempt the UPDATE side of an UPSERT
-	if err = randomize.Struct(seed, &o, episodeDBTypes, false, episodePrimaryKeyColumns...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err = randomize.Struct(seed, &o, turnDBTypes, false, turnPrimaryKeyColumns...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	if err = o.Upsert(ctx, tx, true, nil, boil.Infer(), boil.Infer()); err != nil {
-		t.Errorf("Unable to upsert Episode: %s", err)
+		t.Errorf("Unable to upsert Turn: %s", err)
 	}
 
-	count, err = Episodes().Count(ctx, tx)
+	count, err = Turns().Count(ctx, tx)
 	if err != nil {
 		t.Error(err)
 	}

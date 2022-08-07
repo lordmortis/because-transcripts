@@ -958,32 +958,32 @@ func testUtteranceToManyRemoveOpSpeakers(t *testing.T) {
 	}
 }
 
-func testUtteranceToOneEpisodeUsingEpisode(t *testing.T) {
+func testUtteranceToOneTurnUsingTurn(t *testing.T) {
 	ctx := context.Background()
 	tx := MustTx(boil.BeginTx(ctx, nil))
 	defer func() { _ = tx.Rollback() }()
 
 	var local Utterance
-	var foreign Episode
+	var foreign Turn
 
 	seed := randomize.NewSeed()
 	if err := randomize.Struct(seed, &local, utteranceDBTypes, false, utteranceColumnsWithDefault...); err != nil {
 		t.Errorf("Unable to randomize Utterance struct: %s", err)
 	}
-	if err := randomize.Struct(seed, &foreign, episodeDBTypes, false, episodeColumnsWithDefault...); err != nil {
-		t.Errorf("Unable to randomize Episode struct: %s", err)
+	if err := randomize.Struct(seed, &foreign, turnDBTypes, false, turnColumnsWithDefault...); err != nil {
+		t.Errorf("Unable to randomize Turn struct: %s", err)
 	}
 
 	if err := foreign.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.EpisodeID, foreign.ID)
+	queries.Assign(&local.TurnID, foreign.ID)
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
 
-	check, err := local.Episode().One(ctx, tx)
+	check, err := local.Turn().One(ctx, tx)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -993,23 +993,23 @@ func testUtteranceToOneEpisodeUsingEpisode(t *testing.T) {
 	}
 
 	slice := UtteranceSlice{&local}
-	if err = local.L.LoadEpisode(ctx, tx, false, (*[]*Utterance)(&slice), nil); err != nil {
+	if err = local.L.LoadTurn(ctx, tx, false, (*[]*Utterance)(&slice), nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.Episode == nil {
+	if local.R.Turn == nil {
 		t.Error("struct should have been eager loaded")
 	}
 
-	local.R.Episode = nil
-	if err = local.L.LoadEpisode(ctx, tx, true, &local, nil); err != nil {
+	local.R.Turn = nil
+	if err = local.L.LoadTurn(ctx, tx, true, &local, nil); err != nil {
 		t.Fatal(err)
 	}
-	if local.R.Episode == nil {
+	if local.R.Turn == nil {
 		t.Error("struct should have been eager loaded")
 	}
 }
 
-func testUtteranceToOneSetOpEpisodeUsingEpisode(t *testing.T) {
+func testUtteranceToOneSetOpTurnUsingTurn(t *testing.T) {
 	var err error
 
 	ctx := context.Background()
@@ -1017,16 +1017,16 @@ func testUtteranceToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 	defer func() { _ = tx.Rollback() }()
 
 	var a Utterance
-	var b, c Episode
+	var b, c Turn
 
 	seed := randomize.NewSeed()
 	if err = randomize.Struct(seed, &a, utteranceDBTypes, false, strmangle.SetComplement(utterancePrimaryKeyColumns, utteranceColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &b, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &b, turnDBTypes, false, strmangle.SetComplement(turnPrimaryKeyColumns, turnColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
-	if err = randomize.Struct(seed, &c, episodeDBTypes, false, strmangle.SetComplement(episodePrimaryKeyColumns, episodeColumnsWithoutDefault)...); err != nil {
+	if err = randomize.Struct(seed, &c, turnDBTypes, false, strmangle.SetComplement(turnPrimaryKeyColumns, turnColumnsWithoutDefault)...); err != nil {
 		t.Fatal(err)
 	}
 
@@ -1037,32 +1037,32 @@ func testUtteranceToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i, x := range []*Episode{&b, &c} {
-		err = a.SetEpisode(ctx, tx, i != 0, x)
+	for i, x := range []*Turn{&b, &c} {
+		err = a.SetTurn(ctx, tx, i != 0, x)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		if a.R.Episode != x {
+		if a.R.Turn != x {
 			t.Error("relationship struct not set to correct value")
 		}
 
 		if x.R.Utterances[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.EpisodeID, x.ID) {
-			t.Error("foreign key was wrong value", a.EpisodeID)
+		if !queries.Equal(a.TurnID, x.ID) {
+			t.Error("foreign key was wrong value", a.TurnID)
 		}
 
-		zero := reflect.Zero(reflect.TypeOf(a.EpisodeID))
-		reflect.Indirect(reflect.ValueOf(&a.EpisodeID)).Set(zero)
+		zero := reflect.Zero(reflect.TypeOf(a.TurnID))
+		reflect.Indirect(reflect.ValueOf(&a.TurnID)).Set(zero)
 
 		if err = a.Reload(ctx, tx); err != nil {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.EpisodeID, x.ID) {
-			t.Error("foreign key was wrong value", a.EpisodeID, x.ID)
+		if !queries.Equal(a.TurnID, x.ID) {
+			t.Error("foreign key was wrong value", a.TurnID, x.ID)
 		}
 	}
 }
@@ -1141,7 +1141,7 @@ func testUtterancesSelect(t *testing.T) {
 }
 
 var (
-	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `EpisodeID`: `BLOB`, `SequenceNo`: `INTEGER`, `IsParalinguistic`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `TurnID`: `BLOB`, `SequenceNo`: `INTEGER`, `IsParalinguistic`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
 	_                = bytes.MinRead
 )
 

@@ -12,11 +12,11 @@
 </div>
 <div>
     <h1>Episodes</h1>
-    <ol>
-        {{ range .Episodes }}
-        <li><a href="/episode/{{.id}}">{{.name}}</a> - aired {{.aired}}</li>
+    <ul>
+        {{ range .episodes }}
+        <li><a href="/episode/{{.ID}}">{{.Number}} - {{.Name}}</a> - aired {{.Date}}</li>
         {{ end }}
-    </ol>
+    </ul>
 </div>
 </body>
 </html>

@@ -24,9 +24,22 @@ CREATE TABLE "speakers" (
     updated_at DATETIME NOT NULL
 );
 
-CREATE TABLE "utterances" (
+CREATE TABLE "turns" (
     id BLOB NOT NULL PRIMARY KEY,
     episode_id BLOB NOT NULL,
+    sequence_no INTEGER NOT NULL,
+    start_time INTEGER,
+    end_time INTEGER,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    CONSTRAINT episode_id_check FOREIGN KEY (episode_id) REFERENCES episodes (id)
+);
+
+CREATE INDEX turns_by_episode ON turns(episode_id);
+
+CREATE TABLE "utterances" (
+    id BLOB NOT NULL PRIMARY KEY,
+    turn_id BLOB NOT NULL,
     sequence_no INTEGER NOT NULL,
     is_paralinguistic INTEGER NOT NULL,
     start_time INTEGER,
@@ -34,8 +47,13 @@ CREATE TABLE "utterances" (
     utterance TEXT,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL,
-    CONSTRAINT episode_id_check FOREIGN KEY (episode_id) REFERENCES episodes (id)
+    CONSTRAINT turn_id_check FOREIGN KEY (turn_id) REFERENCES turns (id)
 );
+
+CREATE INDEX utterance_order ON utterances(sequence_no);
+CREATE INDEX utterance_time_order ON utterances(start_time);
+CREATE INDEX utterance_sequence_order ON utterances(sequence_no);
+CREATE INDEX utterances_by_turns ON utterances(turn_id);
 
 CREATE TABLE "utterance_speakers" (
   utterance_id BLOB NOT NULL,
@@ -45,16 +63,14 @@ CREATE TABLE "utterance_speakers" (
   CONSTRAINT speaker_id_check FOREIGN KEY (speaker_id) REFERENCES speakers (id)
 );
 
-CREATE INDEX utterance_order ON utterances(sequence_no);
-CREATE INDEX utterance_time_order ON utterances(start_time);
-CREATE INDEX utterances_by_episode ON utterances(episode_id);
-
 CREATE TABLE "utterance_fragments" (
     id BLOB NOT NULL PRIMARY KEY,
     value TEXT,
     created_at DATETIME NOT NULL,
     updated_at DATETIME NOT NULL
 );
+
+CREATE INDEX utterance_fragment_text ON utterance_fragments(value);
 
 CREATE TABLE "utterance_fragment_links" (
     utterance_id BLOB NOT NULL,

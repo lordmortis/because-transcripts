@@ -9,25 +9,49 @@
             padding: 0 5px 5px 0;
         }
 
+        span.speaker a {
+            text-decoration: none;
+        }
+
+        span.speaker a:hover {
+            text-decoration: underline;
+        }
+
+        span.utterance {
+            padding: 0 5px 5px 0;
+        }
+
+        span.utterance:hover {
+            padding: 0 5px 5px 0;
+            background-color: beige;
+        }
+
         span.paralinguistic {
             font-style: italic;
         }
+
+        ul#transcript li {
+            list-style-type: none;
+        }
+
     </style>
 </head>
 <body>
 <h1>{{ .episode.Number }} - {{ .episode.Name }}</h1>
-<p>{{ .count }} lines</p>
-<ul>
-    {{ range .utterances }}
-    <li>
-        {{ range .Speakers }}<span class="speaker"><a href="/speaker/{{.ID}}">{{ .Name }}</a></span>{{ end }}
-        {{ if .IsParalinguistic }}
-        <span class="paralinguistic">
+<p>{{ .turnCount }} turns</p>
+<ul id="transcript">
+    {{ range .turns }}
+    <li><a id="turn_{{.SequenceNo}}"></a>
+        {{- if (index .Utterances 0).Speakers }}
+        {{- range (index .Utterances 0).Speakers }}<span class="speaker"><a href="/speaker/{{.ID}}">{{.Name}}</a></span>{{- end}}
+         -
         {{ end }}
-        {{ .Utterance }}
-        {{ if .IsParalinguistic }}
-        </span>
-        {{ end }}
+        {{- range .Utterances }}
+            {{- if .IsParalinguistic }}<span class="utterance paralinguistic">
+            {{- else }}<span class="utterance">
+            {{- end }}
+            {{- .Utterance }}</span>
+        {{- end }}
     </li>
     {{ end }}
 </ul>

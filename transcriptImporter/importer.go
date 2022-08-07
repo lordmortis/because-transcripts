@@ -14,19 +14,20 @@ import (
 )
 
 var (
-	spokenLineRegex     *regexp.Regexp
-	paralinguisticRegex *regexp.Regexp
+	spokenLineRegex         *regexp.Regexp
+	paralinguisticLineRegex *regexp.Regexp
 )
 
 func init() {
-	spokenLineRegex = regexp.MustCompile(`^(([A-Z\s]*):)(.*)$`)
-	paralinguisticRegex = regexp.MustCompile(`^\[.*]$`)
+	spokenLineRegex = regexp.MustCompile(`^(([A-Za-z\s]*):)(.*)$`)
+	paralinguisticLineRegex = regexp.MustCompile(`^\[.*]$`)
 }
 
 func doImport(filePath string, source *datasource.DataSource) error {
 	ctx := context.Background()
 
 	fileDesc, err := os.Open(filePath)
+	defer fileDesc.Close()
 	if err != nil {
 		return errors.Because(err, nil, "could not import file")
 	}
@@ -75,72 +76,128 @@ func doImport(filePath string, source *datasource.DataSource) error {
 
 	scanner := bufio.NewScanner(fileDesc)
 	lineindex := 0
+	sequenceNo := 0
 
 	groupUtterances := make([]*datasource.Utterance, 0)
 	var currentSpeaker *datasource.Speaker
+	currentSpeakerAll := false
 	currentSpeaker = nil
 
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) == 0 {
+			lineindex++
 			continue
 		}
 
-		utterance := episode.NewUtterance()
-		utterance.SequenceNo = lineindex
-		utterance.Utterance = line
-
-		if paralinguisticRegex.MatchString(line) {
-			utterance.IsParalinguistic = true
-			utterance.Utterance = line[1 : len(line)-1]
-		} else if spokenLineRegex.MatchString(line) {
-			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
-			if len(matches) != 1 || len(matches[0]) != 4 {
-				return errors.New(fmt.Sprintf("could not import speaker on line %d from file '%s'", lineindex, filePath))
-			}
-			transcriptName := matches[0][2]
-
-			if strings.EqualFold(transcriptName, "all") {
-				groupUtterances = append(groupUtterances, utterance)
-			}
-
-			currentSpeaker, err = source.SpeakerWithTranscriptName(ctx, transcriptName)
-			if err != nil {
-				errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
-				return errors.Because(err, nil, errorString)
-			}
-
-			if currentSpeaker == nil {
-				currentSpeaker = source.NewSpeaker()
-				currentSpeaker.TranscriptName = transcriptName
-				currentSpeaker.Name = transcriptName
-				_, err := currentSpeaker.Update(ctx)
-				if err != nil {
-					errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
-					return errors.Because(err, nil, errorString)
-				}
-			}
-			utterance.Speakers = []*datasource.Speaker{currentSpeaker}
-			utterance.Utterance = matches[0][3]
-		} else {
-			utterance.Speakers = []*datasource.Speaker{currentSpeaker}
-			utterance.Utterance = line
-		}
-
-		success, err := utterance.Update(ctx)
+		turn := episode.NewTurn()
+		turn.SequenceNo = sequenceNo
+		updated, err := turn.Update(ctx)
 		if err != nil {
-			errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+			errorString := fmt.Sprintf("could not create turn for %s:%d", filePath, lineindex)
 			return errors.Because(err, nil, errorString)
 		}
 
-		if !success {
-			errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
-			return errors.New(errorString)
+		if !updated {
+			return errors.New(fmt.Sprintf("could not create turn for %s:%d", filePath, lineindex))
+		}
+
+		sequenceNo += 10
+
+		var utterances []*datasource.Utterance
+
+		if paralinguisticLineRegex.MatchString(line) {
+			utterance := handleParalinguistic(turn, 0, line)
+			updated, err := utterance.Update(ctx)
+			if err != nil {
+				errorString := fmt.Sprintf("could not create utterance for %s:%d", filePath, lineindex)
+				return errors.Because(err, nil, errorString)
+			}
+			if !updated {
+				return errors.New(fmt.Sprintf("could not create utterance for %s:%d", filePath, lineindex))
+			}
+
+			lineindex++
+			continue
+		} else if spokenLineRegex.MatchString(line) {
+			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
+			if len(matches) != 1 || len(matches[0]) != 4 {
+				return errors.New(fmt.Sprintf("could not parse %s:%d", filePath, lineindex))
+			}
+
+			utterances, err = handleSpokenLine(turn, strings.TrimSpace(matches[0][3]))
+			if err != nil {
+				return errors.New(fmt.Sprintf("could not create utterances from %s:%d", filePath, lineindex))
+			}
+
+			transcriptName := matches[0][2]
+			if strings.EqualFold(transcriptName, "all") {
+				groupUtterances = append(groupUtterances, utterances...)
+				currentSpeaker = nil
+				currentSpeakerAll = true
+			} else {
+				currentSpeaker, err = source.SpeakerWithTranscriptName(ctx, transcriptName)
+				if err != nil {
+					errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
+					return errors.Because(err, nil, errorString)
+				}
+
+				if currentSpeaker == nil {
+					currentSpeaker = source.NewSpeaker()
+					currentSpeaker.TranscriptName = transcriptName
+					currentSpeaker.Name = transcriptName
+					_, err := currentSpeaker.Update(ctx)
+					if err != nil {
+						errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
+						return errors.Because(err, nil, errorString)
+					}
+				}
+			}
+		} else {
+			utterances, err = handleSpokenLine(turn, line)
+		}
+
+		for _, utterance := range utterances {
+			if !currentSpeakerAll && currentSpeaker != nil {
+				utterance.Speakers = []*datasource.Speaker{currentSpeaker}
+			} else {
+				utterance.Speakers = []*datasource.Speaker{}
+			}
+
+			success, err := utterance.Update(ctx)
+			if err != nil {
+				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+				return errors.Because(err, nil, errorString)
+			}
+
+			if !success {
+				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+				return errors.New(errorString)
+			}
 		}
 
 		lineindex++
 	}
 
-	defer fileDesc.Close()
+	episodeSpeakers, _, err := episode.Speakers(ctx, -1, -1)
+	if err != nil {
+		return errors.Because(err, nil, "could not find all speakers")
+	}
+
+	for _, utterance := range groupUtterances {
+		utterance.Speakers = episodeSpeakers
+		_, err := utterance.Update(ctx)
+		if err != nil {
+			return errors.Because(err, nil, "could not set group speakers")
+		}
+	}
+
+	fileDesc.Close()
+
+	err = os.Remove(filePath)
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("could not delete file '%s': %s\n", filePath, err))
+	}
+
 	return nil
 }

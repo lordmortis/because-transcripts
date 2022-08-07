@@ -26,8 +26,15 @@ type Episode struct {
 	source  *DataSource
 }
 
-func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int) ([]*Episode, int64, error) {
+func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int, ascending bool) ([]*Episode, int64, error) {
 	var query []qm.QueryMod
+
+	if ascending {
+		query = append(query, qm.OrderBy("episodes.number"))
+	} else {
+		query = append(query, qm.OrderBy("episodes.number desc"))
+	}
+
 	count, err := datasource_raw.Episodes(query...).Count(ctx, source.connection)
 	if err != nil {
 		return nil, -1, err
@@ -131,19 +138,18 @@ func (model *Episode) Update(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
-func (model *Episode) NewUtterance() *Utterance {
-	return &Utterance{
+func (model *Episode) NewTurn() *Turn {
+	return &Turn{
 		source:     model.source,
 		Episode:    model,
 		SequenceNo: -1,
-		Speakers:   []*Speaker{},
 	}
 }
 
-func (model *Episode) Utterances(ctx context.Context, limit int, offset int, includeSpeakers bool) ([]Utterance, int64, error) {
+func (model *Episode) Turns(ctx context.Context, limit int, offset int, includeUtterances bool, includeSpeakers bool) ([]*Turn, int64, error) {
 	var query []qm.QueryMod
 
-	count, err := model.dbModel.Utterances().Count(ctx, model.source.connection)
+	count, err := model.dbModel.Turns().Count(ctx, model.source.connection)
 	if err != nil {
 		return nil, -1, err
 	}
@@ -153,23 +159,60 @@ func (model *Episode) Utterances(ctx context.Context, limit int, offset int, inc
 		query = append(query, qm.Offset(offset))
 	}
 
-	if includeSpeakers {
-		query = append(query, qm.Load("Speakers"))
+	if includeUtterances {
+		query = append(query, qm.Load("Utterances"))
 	}
 
-	dbModels, err := model.dbModel.Utterances(query...).All(ctx, model.source.connection)
+	if includeUtterances && includeSpeakers {
+		query = append(query, qm.Load("Utterances.Speakers"))
+	}
+
+	dbModels, err := model.dbModel.Turns(query...).All(ctx, model.source.connection)
 	if err != nil {
 		return nil, count, err
 	}
 
-	models := make([]Utterance, len(dbModels))
+	models := make([]*Turn, len(dbModels))
 	for index := range dbModels {
-		model := Utterance{source: model.source}
+		model := Turn{source: model.source}
 		model.fromDB(dbModels[index])
-		models[index] = model
+		models[index] = &model
 	}
 
 	return models, count, nil
+}
+
+func (model *Episode) Speakers(ctx context.Context, limit int, offset int) ([]*Speaker, int64, error) {
+	var query []qm.QueryMod
+	query = append(query, qm.Distinct("speakers.id"))
+	query = append(query, qm.InnerJoin("utterance_speakers us ON speakers.id = us.speaker_id"))
+	query = append(query, qm.InnerJoin("utterances u ON us.utterance_id = u.id"))
+	query = append(query, qm.WhereIn("u.turn_id in (SELECT id FROM turns WHERE episode_id = ?)", model.dbModel.ID))
+
+	count, err := datasource_raw.Speakers(query...).Count(ctx, model.source.connection)
+	if err != nil {
+		return nil, -1, err
+	}
+
+	if limit > 0 && offset >= 0 {
+		query = append(query, qm.Limit(limit))
+		query = append(query, qm.Offset(offset))
+	}
+
+	dbModels, err := datasource_raw.Speakers(query...).All(ctx, model.source.connection)
+	if err != nil {
+		return nil, count, err
+	}
+
+	models := make([]*Speaker, len(dbModels))
+	for index := range dbModels {
+		model := Speaker{source: model.source}
+		model.fromDB(dbModels[index])
+		models[index] = &model
+	}
+
+	return models, count, nil
+
 }
 
 func (model *Episode) fromDB(dbModel *datasource_raw.Episode) {

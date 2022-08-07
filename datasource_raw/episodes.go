@@ -165,17 +165,17 @@ var EpisodeWhere = struct {
 
 // EpisodeRels is where relationship names are stored.
 var EpisodeRels = struct {
-	Podcast    string
-	Utterances string
+	Podcast string
+	Turns   string
 }{
-	Podcast:    "Podcast",
-	Utterances: "Utterances",
+	Podcast: "Podcast",
+	Turns:   "Turns",
 }
 
 // episodeR is where relationships are stored.
 type episodeR struct {
-	Podcast    *Podcast       `boil:"Podcast" json:"Podcast" toml:"Podcast" yaml:"Podcast"`
-	Utterances UtteranceSlice `boil:"Utterances" json:"Utterances" toml:"Utterances" yaml:"Utterances"`
+	Podcast *Podcast  `boil:"Podcast" json:"Podcast" toml:"Podcast" yaml:"Podcast"`
+	Turns   TurnSlice `boil:"Turns" json:"Turns" toml:"Turns" yaml:"Turns"`
 }
 
 // NewStruct creates a new relationship struct
@@ -190,11 +190,11 @@ func (r *episodeR) GetPodcast() *Podcast {
 	return r.Podcast
 }
 
-func (r *episodeR) GetUtterances() UtteranceSlice {
+func (r *episodeR) GetTurns() TurnSlice {
 	if r == nil {
 		return nil
 	}
-	return r.Utterances
+	return r.Turns
 }
 
 // episodeL is where Load methods for each relationship are stored.
@@ -497,18 +497,18 @@ func (o *Episode) Podcast(mods ...qm.QueryMod) podcastQuery {
 	return Podcasts(queryMods...)
 }
 
-// Utterances retrieves all the utterance's Utterances with an executor.
-func (o *Episode) Utterances(mods ...qm.QueryMod) utteranceQuery {
+// Turns retrieves all the turn's Turns with an executor.
+func (o *Episode) Turns(mods ...qm.QueryMod) turnQuery {
 	var queryMods []qm.QueryMod
 	if len(mods) != 0 {
 		queryMods = append(queryMods, mods...)
 	}
 
 	queryMods = append(queryMods,
-		qm.Where("\"utterances\".\"episode_id\"=?", o.ID),
+		qm.Where("\"turns\".\"episode_id\"=?", o.ID),
 	)
 
-	return Utterances(queryMods...)
+	return Turns(queryMods...)
 }
 
 // LoadPodcast allows an eager lookup of values, cached into the
@@ -635,9 +635,9 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 	return nil
 }
 
-// LoadUtterances allows an eager lookup of values, cached into the
+// LoadTurns allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for a 1-M or N-M relationship.
-func (episodeL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, singular bool, maybeEpisode interface{}, mods queries.Applicator) error {
+func (episodeL) LoadTurns(ctx context.Context, e boil.ContextExecutor, singular bool, maybeEpisode interface{}, mods queries.Applicator) error {
 	var slice []*Episode
 	var object *Episode
 
@@ -691,8 +691,8 @@ func (episodeL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	}
 
 	query := NewQuery(
-		qm.From(`utterances`),
-		qm.WhereIn(`utterances.episode_id in ?`, args...),
+		qm.From(`turns`),
+		qm.WhereIn(`turns.episode_id in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -700,22 +700,22 @@ func (episodeL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load utterances")
+		return errors.Wrap(err, "failed to eager load turns")
 	}
 
-	var resultSlice []*Utterance
+	var resultSlice []*Turn
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice utterances")
+		return errors.Wrap(err, "failed to bind eager loaded slice turns")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results in eager load on utterances")
+		return errors.Wrap(err, "failed to close results in eager load on turns")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for utterances")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for turns")
 	}
 
-	if len(utteranceAfterSelectHooks) != 0 {
+	if len(turnAfterSelectHooks) != 0 {
 		for _, obj := range resultSlice {
 			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
 				return err
@@ -723,10 +723,10 @@ func (episodeL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 		}
 	}
 	if singular {
-		object.R.Utterances = resultSlice
+		object.R.Turns = resultSlice
 		for _, foreign := range resultSlice {
 			if foreign.R == nil {
-				foreign.R = &utteranceR{}
+				foreign.R = &turnR{}
 			}
 			foreign.R.Episode = object
 		}
@@ -736,9 +736,9 @@ func (episodeL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
 			if queries.Equal(local.ID, foreign.EpisodeID) {
-				local.R.Utterances = append(local.R.Utterances, foreign)
+				local.R.Turns = append(local.R.Turns, foreign)
 				if foreign.R == nil {
-					foreign.R = &utteranceR{}
+					foreign.R = &turnR{}
 				}
 				foreign.R.Episode = local
 				break
@@ -796,11 +796,11 @@ func (o *Episode) SetPodcast(ctx context.Context, exec boil.ContextExecutor, ins
 	return nil
 }
 
-// AddUtterances adds the given related objects to the existing relationships
+// AddTurns adds the given related objects to the existing relationships
 // of the episode, optionally inserting them as new records.
-// Appends related to o.R.Utterances.
+// Appends related to o.R.Turns.
 // Sets related.R.Episode appropriately.
-func (o *Episode) AddUtterances(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Utterance) error {
+func (o *Episode) AddTurns(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Turn) error {
 	var err error
 	for _, rel := range related {
 		if insert {
@@ -810,9 +810,9 @@ func (o *Episode) AddUtterances(ctx context.Context, exec boil.ContextExecutor, 
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
-				"UPDATE \"utterances\" SET %s WHERE %s",
+				"UPDATE \"turns\" SET %s WHERE %s",
 				strmangle.SetParamNames("\"", "\"", 0, []string{"episode_id"}),
-				strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
+				strmangle.WhereClause("\"", "\"", 0, turnPrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -831,15 +831,15 @@ func (o *Episode) AddUtterances(ctx context.Context, exec boil.ContextExecutor, 
 
 	if o.R == nil {
 		o.R = &episodeR{
-			Utterances: related,
+			Turns: related,
 		}
 	} else {
-		o.R.Utterances = append(o.R.Utterances, related...)
+		o.R.Turns = append(o.R.Turns, related...)
 	}
 
 	for _, rel := range related {
 		if rel.R == nil {
-			rel.R = &utteranceR{
+			rel.R = &turnR{
 				Episode: o,
 			}
 		} else {

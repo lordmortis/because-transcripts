@@ -2,9 +2,11 @@ package httpServer
 
 import (
 	"BecauseLanguageBot/datasource"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
 	"net/http"
+	"os"
 )
 
 func handleEpisode(ctx *gin.Context) {
@@ -17,6 +19,7 @@ func handleEpisode(ctx *gin.Context) {
 
 	episodeModel, err := dataSource.EpisodeWithId(ctx, episodeID)
 	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Couldn't fetch episode - server Error: %s\n", err))
 		ctx.HTML(http.StatusInternalServerError, "episodeError.html", gin.H{"error": "server error"})
 		return
 	}
@@ -26,11 +29,12 @@ func handleEpisode(ctx *gin.Context) {
 		return
 	}
 
-	utterances, count, err := episodeModel.Utterances(ctx, 0, 0, true)
+	turns, count, err := episodeModel.Turns(ctx, 0, 0, true, true)
 	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Couldn't fetch turns - server Error: %s\n", err))
 		ctx.HTML(http.StatusInternalServerError, "episodeError.html", gin.H{"error": "server error"})
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "episode.html", gin.H{"episode": episodeModel, "utterances": utterances, "count": count})
+	ctx.HTML(http.StatusOK, "episode.html", gin.H{"episode": episodeModel, "turns": turns, "turnCount": count})
 }

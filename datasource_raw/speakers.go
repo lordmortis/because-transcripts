@@ -484,7 +484,7 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	}
 
 	query := NewQuery(
-		qm.Select("\"utterances\".\"id\", \"utterances\".\"episode_id\", \"utterances\".\"sequence_no\", \"utterances\".\"is_paralinguistic\", \"utterances\".\"start_time\", \"utterances\".\"end_time\", \"utterances\".\"utterance\", \"utterances\".\"created_at\", \"utterances\".\"updated_at\", \"a\".\"speaker_id\""),
+		qm.Select("\"utterances\".\"id\", \"utterances\".\"turn_id\", \"utterances\".\"sequence_no\", \"utterances\".\"is_paralinguistic\", \"utterances\".\"start_time\", \"utterances\".\"end_time\", \"utterances\".\"utterance\", \"utterances\".\"created_at\", \"utterances\".\"updated_at\", \"a\".\"speaker_id\""),
 		qm.From("\"utterances\""),
 		qm.InnerJoin("\"utterance_speakers\" as \"a\" on \"utterances\".\"id\" = \"a\".\"utterance_id\""),
 		qm.WhereIn("\"a\".\"speaker_id\" in ?", args...),
@@ -505,7 +505,7 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 		one := new(Utterance)
 		var localJoinCol []byte
 
-		err = results.Scan(&one.ID, &one.EpisodeID, &one.SequenceNo, &one.IsParalinguistic, &one.StartTime, &one.EndTime, &one.Utterance, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
+		err = results.Scan(&one.ID, &one.TurnID, &one.SequenceNo, &one.IsParalinguistic, &one.StartTime, &one.EndTime, &one.Utterance, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for utterances")
 		}

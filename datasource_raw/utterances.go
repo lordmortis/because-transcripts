@@ -25,7 +25,7 @@ import (
 // Utterance is an object representing the database table.
 type Utterance struct {
 	ID               []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	EpisodeID        []byte      `boil:"episode_id" json:"episode_id" toml:"episode_id" yaml:"episode_id"`
+	TurnID           []byte      `boil:"turn_id" json:"turn_id" toml:"turn_id" yaml:"turn_id"`
 	SequenceNo       int64       `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
 	IsParalinguistic int64       `boil:"is_paralinguistic" json:"is_paralinguistic" toml:"is_paralinguistic" yaml:"is_paralinguistic"`
 	StartTime        null.Int64  `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
@@ -40,7 +40,7 @@ type Utterance struct {
 
 var UtteranceColumns = struct {
 	ID               string
-	EpisodeID        string
+	TurnID           string
 	SequenceNo       string
 	IsParalinguistic string
 	StartTime        string
@@ -50,7 +50,7 @@ var UtteranceColumns = struct {
 	UpdatedAt        string
 }{
 	ID:               "id",
-	EpisodeID:        "episode_id",
+	TurnID:           "turn_id",
 	SequenceNo:       "sequence_no",
 	IsParalinguistic: "is_paralinguistic",
 	StartTime:        "start_time",
@@ -62,7 +62,7 @@ var UtteranceColumns = struct {
 
 var UtteranceTableColumns = struct {
 	ID               string
-	EpisodeID        string
+	TurnID           string
 	SequenceNo       string
 	IsParalinguistic string
 	StartTime        string
@@ -72,7 +72,7 @@ var UtteranceTableColumns = struct {
 	UpdatedAt        string
 }{
 	ID:               "utterances.id",
-	EpisodeID:        "utterances.episode_id",
+	TurnID:           "utterances.turn_id",
 	SequenceNo:       "utterances.sequence_no",
 	IsParalinguistic: "utterances.is_paralinguistic",
 	StartTime:        "utterances.start_time",
@@ -86,7 +86,7 @@ var UtteranceTableColumns = struct {
 
 var UtteranceWhere = struct {
 	ID               whereHelper__byte
-	EpisodeID        whereHelper__byte
+	TurnID           whereHelper__byte
 	SequenceNo       whereHelperint64
 	IsParalinguistic whereHelperint64
 	StartTime        whereHelpernull_Int64
@@ -96,7 +96,7 @@ var UtteranceWhere = struct {
 	UpdatedAt        whereHelpertime_Time
 }{
 	ID:               whereHelper__byte{field: "\"utterances\".\"id\""},
-	EpisodeID:        whereHelper__byte{field: "\"utterances\".\"episode_id\""},
+	TurnID:           whereHelper__byte{field: "\"utterances\".\"turn_id\""},
 	SequenceNo:       whereHelperint64{field: "\"utterances\".\"sequence_no\""},
 	IsParalinguistic: whereHelperint64{field: "\"utterances\".\"is_paralinguistic\""},
 	StartTime:        whereHelpernull_Int64{field: "\"utterances\".\"start_time\""},
@@ -108,18 +108,18 @@ var UtteranceWhere = struct {
 
 // UtteranceRels is where relationship names are stored.
 var UtteranceRels = struct {
-	Episode                string
+	Turn                   string
 	UtteranceFragmentLinks string
 	Speakers               string
 }{
-	Episode:                "Episode",
+	Turn:                   "Turn",
 	UtteranceFragmentLinks: "UtteranceFragmentLinks",
 	Speakers:               "Speakers",
 }
 
 // utteranceR is where relationships are stored.
 type utteranceR struct {
-	Episode                *Episode                   `boil:"Episode" json:"Episode" toml:"Episode" yaml:"Episode"`
+	Turn                   *Turn                      `boil:"Turn" json:"Turn" toml:"Turn" yaml:"Turn"`
 	UtteranceFragmentLinks UtteranceFragmentLinkSlice `boil:"UtteranceFragmentLinks" json:"UtteranceFragmentLinks" toml:"UtteranceFragmentLinks" yaml:"UtteranceFragmentLinks"`
 	Speakers               SpeakerSlice               `boil:"Speakers" json:"Speakers" toml:"Speakers" yaml:"Speakers"`
 }
@@ -129,11 +129,11 @@ func (*utteranceR) NewStruct() *utteranceR {
 	return &utteranceR{}
 }
 
-func (r *utteranceR) GetEpisode() *Episode {
+func (r *utteranceR) GetTurn() *Turn {
 	if r == nil {
 		return nil
 	}
-	return r.Episode
+	return r.Turn
 }
 
 func (r *utteranceR) GetUtteranceFragmentLinks() UtteranceFragmentLinkSlice {
@@ -154,8 +154,8 @@ func (r *utteranceR) GetSpeakers() SpeakerSlice {
 type utteranceL struct{}
 
 var (
-	utteranceAllColumns            = []string{"id", "episode_id", "sequence_no", "is_paralinguistic", "start_time", "end_time", "utterance", "created_at", "updated_at"}
-	utteranceColumnsWithoutDefault = []string{"id", "episode_id", "sequence_no", "is_paralinguistic", "created_at", "updated_at"}
+	utteranceAllColumns            = []string{"id", "turn_id", "sequence_no", "is_paralinguistic", "start_time", "end_time", "utterance", "created_at", "updated_at"}
+	utteranceColumnsWithoutDefault = []string{"id", "turn_id", "sequence_no", "is_paralinguistic", "created_at", "updated_at"}
 	utteranceColumnsWithDefault    = []string{"start_time", "end_time", "utterance"}
 	utterancePrimaryKeyColumns     = []string{"id"}
 	utteranceGeneratedColumns      = []string{}
@@ -439,15 +439,15 @@ func (q utteranceQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (
 	return count > 0, nil
 }
 
-// Episode pointed to by the foreign key.
-func (o *Utterance) Episode(mods ...qm.QueryMod) episodeQuery {
+// Turn pointed to by the foreign key.
+func (o *Utterance) Turn(mods ...qm.QueryMod) turnQuery {
 	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.EpisodeID),
+		qm.Where("\"id\" = ?", o.TurnID),
 	}
 
 	queryMods = append(queryMods, mods...)
 
-	return Episodes(queryMods...)
+	return Turns(queryMods...)
 }
 
 // UtteranceFragmentLinks retrieves all the utterance_fragment_link's UtteranceFragmentLinks with an executor.
@@ -479,9 +479,9 @@ func (o *Utterance) Speakers(mods ...qm.QueryMod) speakerQuery {
 	return Speakers(queryMods...)
 }
 
-// LoadEpisode allows an eager lookup of values, cached into the
+// LoadTurn allows an eager lookup of values, cached into the
 // loaded structs of the objects. This is for an N-1 relationship.
-func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUtterance interface{}, mods queries.Applicator) error {
+func (utteranceL) LoadTurn(ctx context.Context, e boil.ContextExecutor, singular bool, maybeUtterance interface{}, mods queries.Applicator) error {
 	var slice []*Utterance
 	var object *Utterance
 
@@ -512,8 +512,8 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 		if object.R == nil {
 			object.R = &utteranceR{}
 		}
-		if !queries.IsNil(object.EpisodeID) {
-			args = append(args, object.EpisodeID)
+		if !queries.IsNil(object.TurnID) {
+			args = append(args, object.TurnID)
 		}
 
 	} else {
@@ -524,13 +524,13 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.EpisodeID) {
+				if queries.Equal(a, obj.TurnID) {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.EpisodeID) {
-				args = append(args, obj.EpisodeID)
+			if !queries.IsNil(obj.TurnID) {
+				args = append(args, obj.TurnID)
 			}
 
 		}
@@ -541,8 +541,8 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 	}
 
 	query := NewQuery(
-		qm.From(`episodes`),
-		qm.WhereIn(`episodes.id in ?`, args...),
+		qm.From(`turns`),
+		qm.WhereIn(`turns.id in ?`, args...),
 	)
 	if mods != nil {
 		mods.Apply(query)
@@ -550,19 +550,19 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 
 	results, err := query.QueryContext(ctx, e)
 	if err != nil {
-		return errors.Wrap(err, "failed to eager load Episode")
+		return errors.Wrap(err, "failed to eager load Turn")
 	}
 
-	var resultSlice []*Episode
+	var resultSlice []*Turn
 	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Episode")
+		return errors.Wrap(err, "failed to bind eager loaded slice Turn")
 	}
 
 	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for episodes")
+		return errors.Wrap(err, "failed to close results of eager load for turns")
 	}
 	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for episodes")
+		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for turns")
 	}
 
 	if len(utteranceAfterSelectHooks) != 0 {
@@ -579,9 +579,9 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 
 	if singular {
 		foreign := resultSlice[0]
-		object.R.Episode = foreign
+		object.R.Turn = foreign
 		if foreign.R == nil {
-			foreign.R = &episodeR{}
+			foreign.R = &turnR{}
 		}
 		foreign.R.Utterances = append(foreign.R.Utterances, object)
 		return nil
@@ -589,10 +589,10 @@ func (utteranceL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singu
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.EpisodeID, foreign.ID) {
-				local.R.Episode = foreign
+			if queries.Equal(local.TurnID, foreign.ID) {
+				local.R.Turn = foreign
 				if foreign.R == nil {
-					foreign.R = &episodeR{}
+					foreign.R = &turnR{}
 				}
 				foreign.R.Utterances = append(foreign.R.Utterances, local)
 				break
@@ -848,10 +848,10 @@ func (utteranceL) LoadSpeakers(ctx context.Context, e boil.ContextExecutor, sing
 	return nil
 }
 
-// SetEpisode of the utterance to the related item.
-// Sets o.R.Episode to related.
+// SetTurn of the utterance to the related item.
+// Sets o.R.Turn to related.
 // Adds o to related.R.Utterances.
-func (o *Utterance) SetEpisode(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Episode) error {
+func (o *Utterance) SetTurn(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Turn) error {
 	var err error
 	if insert {
 		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
@@ -861,7 +861,7 @@ func (o *Utterance) SetEpisode(ctx context.Context, exec boil.ContextExecutor, i
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"utterances\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, []string{"episode_id"}),
+		strmangle.SetParamNames("\"", "\"", 0, []string{"turn_id"}),
 		strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
@@ -875,17 +875,17 @@ func (o *Utterance) SetEpisode(ctx context.Context, exec boil.ContextExecutor, i
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.EpisodeID, related.ID)
+	queries.Assign(&o.TurnID, related.ID)
 	if o.R == nil {
 		o.R = &utteranceR{
-			Episode: related,
+			Turn: related,
 		}
 	} else {
-		o.R.Episode = related
+		o.R.Turn = related
 	}
 
 	if related.R == nil {
-		related.R = &episodeR{
+		related.R = &turnR{
 			Utterances: UtteranceSlice{o},
 		}
 	} else {

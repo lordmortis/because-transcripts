@@ -2,16 +2,16 @@ package datasource
 
 import (
 	"BecauseLanguageBot/datasource_raw"
+	"bytes"
 	"context"
 	"github.com/gofrs/uuid"
-	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"time"
 )
 
 type Utterance struct {
 	ID               string     `json:"id"`
-	Episode          *Episode   `json:"episode"`
+	Turn             *Turn      `json:"episode"`
 	Speakers         []*Speaker `json:"speakers"`
 	SequenceNo       int
 	IsParalinguistic bool
@@ -34,40 +34,39 @@ func (model *Utterance) Update(ctx context.Context) (bool, error) {
 		model.ID = UUIDToBase64(model.uuid)
 		dbModel := datasource_raw.Utterance{
 			ID:         model.uuid.Bytes(),
+			TurnID:     model.Turn.dbModel.ID,
 			SequenceNo: int64(model.SequenceNo),
-			EpisodeID:  model.Episode.dbModel.ID,
+			StartTime:  TimeMillisToNullableInt64(model.StartTime),
+			EndTime:    TimeMillisToNullableInt64(model.StartTime),
 		}
 
-		if model.IsParalinguistic {
-			dbModel.IsParalinguistic = 1
-		} else {
-			dbModel.IsParalinguistic = 0
-		}
-
-		if len(model.Utterance) > 0 {
-			dbModel.Utterance = null.StringFrom(model.Utterance)
-		} else {
-			dbModel.Utterance.Valid = false
-			dbModel.Utterance.String = ""
-		}
+		dbModel.IsParalinguistic = BoolToInt64(model.IsParalinguistic)
+		dbModel.Utterance = StringToNullableString(model.Utterance)
 
 		model.dbModel = &dbModel
 	} else {
+		if !bytes.Equal(model.Turn.dbModel.ID, dbModel.TurnID) {
+			dbModel.TurnID = model.Turn.dbModel.ID
+		}
+
 		if dbModel.SequenceNo != int64(model.SequenceNo) {
 			dbModel.SequenceNo = int64(model.SequenceNo)
 		}
 
-		if model.IsParalinguistic && dbModel.IsParalinguistic != 1 {
-			dbModel.IsParalinguistic = 1
-		} else if !model.IsParalinguistic && dbModel.IsParalinguistic != 0 {
-			dbModel.IsParalinguistic = 0
+		if BoolToInt64(model.IsParalinguistic) != dbModel.IsParalinguistic {
+			dbModel.IsParalinguistic = BoolToInt64(model.IsParalinguistic)
 		}
 
-		if len(model.Utterance) > 0 && (!dbModel.Utterance.Valid || dbModel.Utterance.String != model.Utterance) {
-			dbModel.Utterance = null.StringFrom(model.Utterance)
-		} else if len(model.Utterance) == 0 && dbModel.Utterance.Valid {
-			dbModel.Utterance.Valid = false
-			dbModel.Utterance.String = ""
+		if !NullableInt64ToTimeMillisEquals(dbModel.StartTime, model.StartTime) {
+			dbModel.StartTime = TimeMillisToNullableInt64(model.StartTime)
+		}
+
+		if !NullableInt64ToTimeMillisEquals(dbModel.EndTime, model.EndTime) {
+			dbModel.EndTime = TimeMillisToNullableInt64(model.EndTime)
+		}
+
+		if NullableStringToString(dbModel.Utterance) != model.Utterance {
+			dbModel.Utterance = StringToNullableString(model.Utterance)
 		}
 	}
 

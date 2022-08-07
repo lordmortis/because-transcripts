@@ -12,6 +12,8 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Speakers", testSpeakersUpsert)
 
+	t.Run("Turns", testTurnsUpsert)
+
 	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksUpsert)
 
 	t.Run("UtteranceFragments", testUtteranceFragmentsUpsert)
