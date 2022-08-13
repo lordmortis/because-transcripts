@@ -4,8 +4,10 @@ import (
 	"BecauseLanguageBot/datasource_raw"
 	"bytes"
 	"context"
+	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 	"time"
 )
 
@@ -22,6 +24,46 @@ type Utterance struct {
 	uuid    uuid.UUID
 	dbModel *datasource_raw.Utterance
 	source  *DataSource
+}
+
+func (source *DataSource) UtterancesWithText(ctx context.Context, text string, limit int, offset int, includeSpeakers bool, includeTurn bool, includeEpisode bool) ([]*Utterance, int64, error) {
+	var query []qm.QueryMod
+	query = append(query, qm.Where("utterances.utterance LIKE ?", fmt.Sprintf("%%%s%%", text)))
+	count, err := datasource_raw.Utterances(query...).Count(ctx, source.connection)
+	if err != nil {
+		return nil, -1, err
+	}
+
+	if limit > 0 && offset >= 0 {
+		query = append(query, qm.Limit(limit))
+		query = append(query, qm.Offset(offset))
+	}
+
+	if includeSpeakers {
+		query = append(query, qm.Load("Speakers"))
+	}
+
+	if includeTurn {
+		query = append(query, qm.Load("Turn"))
+	}
+
+	if includeEpisode {
+		query = append(query, qm.Load("Turn.Episode"))
+	}
+
+	dbModels, err := datasource_raw.Utterances(query...).All(ctx, source.connection)
+	if err != nil {
+		return nil, count, err
+	}
+
+	models := make([]*Utterance, len(dbModels))
+	for index := range dbModels {
+		model := Utterance{source: source}
+		model.fromDB(dbModels[index])
+		models[index] = &model
+	}
+
+	return models, count, nil
 }
 
 func (model *Utterance) Update(ctx context.Context) (bool, error) {
@@ -115,7 +157,18 @@ func (model *Utterance) fromDB(dbModel *datasource_raw.Utterance) {
 		model.Utterance = ""
 	}
 
-	if dbModel.R != nil && len(dbModel.R.Speakers) > 0 {
+	if dbModel.R == nil {
+		return
+	}
+
+	if dbModel.R.Turn != nil {
+		turnModel := Turn{source: model.source, dbModel: dbModel.R.Turn}
+		dbModel.R.Turn.R.Utterances = []*datasource_raw.Utterance{}
+		turnModel.fromDB(dbModel.R.Turn)
+		model.Turn = &turnModel
+	}
+
+	if len(dbModel.R.Speakers) > 0 {
 		model.Speakers = make([]*Speaker, len(dbModel.R.Speakers))
 		for index, speaker := range dbModel.R.Speakers {
 			speakerModel := Speaker{source: model.source, dbModel: speaker}

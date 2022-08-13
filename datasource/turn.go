@@ -95,7 +95,18 @@ func (model *Turn) fromDB(dbModel *datasource_raw.Turn) {
 	model.StartTime = NullableInt64ToTimeMillis(dbModel.StartTime)
 	model.EndTime = NullableInt64ToTimeMillis(dbModel.EndTime)
 
-	if dbModel.R != nil && len(dbModel.R.Utterances) > 0 {
+	if dbModel.R == nil {
+		return
+	}
+
+	if dbModel.R.Episode != nil {
+		episodeModel := Episode{source: model.source, dbModel: dbModel.R.Episode}
+		dbModel.R.Episode.R.Turns = []*datasource_raw.Turn{}
+		episodeModel.fromDB(dbModel.R.Episode)
+		model.Episode = &episodeModel
+	}
+
+	if len(dbModel.R.Utterances) > 0 {
 		model.Utterances = make([]*Utterance, len(dbModel.R.Utterances))
 		for index, subDbModel := range dbModel.R.Utterances {
 			subModel := Utterance{source: model.source}

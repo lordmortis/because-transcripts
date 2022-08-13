@@ -75,7 +75,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	}
 
 	scanner := bufio.NewScanner(fileDesc)
-	lineindex := 0
+	lineIndex := 0
 	sequenceNo := 0
 
 	groupUtterances := make([]*datasource.Utterance, 0)
@@ -86,7 +86,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	for scanner.Scan() {
 		line := scanner.Text()
 		if len(line) == 0 {
-			lineindex++
+			lineIndex++
 			continue
 		}
 
@@ -94,12 +94,12 @@ func doImport(filePath string, source *datasource.DataSource) error {
 		turn.SequenceNo = sequenceNo
 		updated, err := turn.Update(ctx)
 		if err != nil {
-			errorString := fmt.Sprintf("could not create turn for %s:%d", filePath, lineindex)
+			errorString := fmt.Sprintf("could not create turn for %s:%d", filePath, lineIndex)
 			return errors.Because(err, nil, errorString)
 		}
 
 		if !updated {
-			return errors.New(fmt.Sprintf("could not create turn for %s:%d", filePath, lineindex))
+			return errors.New(fmt.Sprintf("could not create turn for %s:%d", filePath, lineIndex))
 		}
 
 		sequenceNo += 10
@@ -110,24 +110,24 @@ func doImport(filePath string, source *datasource.DataSource) error {
 			utterance := handleParalinguistic(turn, 0, line)
 			updated, err := utterance.Update(ctx)
 			if err != nil {
-				errorString := fmt.Sprintf("could not create utterance for %s:%d", filePath, lineindex)
+				errorString := fmt.Sprintf("could not create utterance for %s:%d", filePath, lineIndex)
 				return errors.Because(err, nil, errorString)
 			}
 			if !updated {
-				return errors.New(fmt.Sprintf("could not create utterance for %s:%d", filePath, lineindex))
+				return errors.New(fmt.Sprintf("could not create utterance for %s:%d", filePath, lineIndex))
 			}
 
-			lineindex++
+			lineIndex++
 			continue
 		} else if spokenLineRegex.MatchString(line) {
 			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
 			if len(matches) != 1 || len(matches[0]) != 4 {
-				return errors.New(fmt.Sprintf("could not parse %s:%d", filePath, lineindex))
+				return errors.New(fmt.Sprintf("could not parse %s:%d", filePath, lineIndex))
 			}
 
 			utterances, err = handleSpokenLine(turn, strings.TrimSpace(matches[0][3]))
 			if err != nil {
-				return errors.New(fmt.Sprintf("could not create utterances from %s:%d", filePath, lineindex))
+				return errors.New(fmt.Sprintf("could not create utterances from %s:%d", filePath, lineIndex))
 			}
 
 			transcriptName := matches[0][2]
@@ -138,7 +138,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 			} else {
 				currentSpeaker, err = source.SpeakerWithTranscriptName(ctx, transcriptName)
 				if err != nil {
-					errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
+					errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
 					return errors.Because(err, nil, errorString)
 				}
 
@@ -148,7 +148,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 					currentSpeaker.Name = transcriptName
 					_, err := currentSpeaker.Update(ctx)
 					if err != nil {
-						errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineindex, filePath)
+						errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
 						return errors.Because(err, nil, errorString)
 					}
 				}
@@ -166,17 +166,17 @@ func doImport(filePath string, source *datasource.DataSource) error {
 
 			success, err := utterance.Update(ctx)
 			if err != nil {
-				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineIndex, filePath)
 				return errors.Because(err, nil, errorString)
 			}
 
 			if !success {
-				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineindex, filePath)
+				errorString := fmt.Sprintf("could not add utterance for line %d from file '%s'", lineIndex, filePath)
 				return errors.New(errorString)
 			}
 		}
 
-		lineindex++
+		lineIndex++
 	}
 
 	episodeSpeakers, _, err := episode.Speakers(ctx, -1, -1)

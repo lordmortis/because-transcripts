@@ -16,8 +16,6 @@ func TestParent(t *testing.T) {
 	t.Run("Podcasts", testPodcasts)
 	t.Run("Speakers", testSpeakers)
 	t.Run("Turns", testTurns)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinks)
-	t.Run("UtteranceFragments", testUtteranceFragments)
 	t.Run("Utterances", testUtterances)
 }
 
@@ -26,8 +24,6 @@ func TestDelete(t *testing.T) {
 	t.Run("Podcasts", testPodcastsDelete)
 	t.Run("Speakers", testSpeakersDelete)
 	t.Run("Turns", testTurnsDelete)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksDelete)
-	t.Run("UtteranceFragments", testUtteranceFragmentsDelete)
 	t.Run("Utterances", testUtterancesDelete)
 }
 
@@ -36,8 +32,6 @@ func TestQueryDeleteAll(t *testing.T) {
 	t.Run("Podcasts", testPodcastsQueryDeleteAll)
 	t.Run("Speakers", testSpeakersQueryDeleteAll)
 	t.Run("Turns", testTurnsQueryDeleteAll)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksQueryDeleteAll)
-	t.Run("UtteranceFragments", testUtteranceFragmentsQueryDeleteAll)
 	t.Run("Utterances", testUtterancesQueryDeleteAll)
 }
 
@@ -46,8 +40,6 @@ func TestSliceDeleteAll(t *testing.T) {
 	t.Run("Podcasts", testPodcastsSliceDeleteAll)
 	t.Run("Speakers", testSpeakersSliceDeleteAll)
 	t.Run("Turns", testTurnsSliceDeleteAll)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksSliceDeleteAll)
-	t.Run("UtteranceFragments", testUtteranceFragmentsSliceDeleteAll)
 	t.Run("Utterances", testUtterancesSliceDeleteAll)
 }
 
@@ -56,8 +48,6 @@ func TestExists(t *testing.T) {
 	t.Run("Podcasts", testPodcastsExists)
 	t.Run("Speakers", testSpeakersExists)
 	t.Run("Turns", testTurnsExists)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksExists)
-	t.Run("UtteranceFragments", testUtteranceFragmentsExists)
 	t.Run("Utterances", testUtterancesExists)
 }
 
@@ -66,8 +56,6 @@ func TestFind(t *testing.T) {
 	t.Run("Podcasts", testPodcastsFind)
 	t.Run("Speakers", testSpeakersFind)
 	t.Run("Turns", testTurnsFind)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksFind)
-	t.Run("UtteranceFragments", testUtteranceFragmentsFind)
 	t.Run("Utterances", testUtterancesFind)
 }
 
@@ -76,8 +64,6 @@ func TestBind(t *testing.T) {
 	t.Run("Podcasts", testPodcastsBind)
 	t.Run("Speakers", testSpeakersBind)
 	t.Run("Turns", testTurnsBind)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksBind)
-	t.Run("UtteranceFragments", testUtteranceFragmentsBind)
 	t.Run("Utterances", testUtterancesBind)
 }
 
@@ -86,8 +72,6 @@ func TestOne(t *testing.T) {
 	t.Run("Podcasts", testPodcastsOne)
 	t.Run("Speakers", testSpeakersOne)
 	t.Run("Turns", testTurnsOne)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksOne)
-	t.Run("UtteranceFragments", testUtteranceFragmentsOne)
 	t.Run("Utterances", testUtterancesOne)
 }
 
@@ -96,8 +80,6 @@ func TestAll(t *testing.T) {
 	t.Run("Podcasts", testPodcastsAll)
 	t.Run("Speakers", testSpeakersAll)
 	t.Run("Turns", testTurnsAll)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksAll)
-	t.Run("UtteranceFragments", testUtteranceFragmentsAll)
 	t.Run("Utterances", testUtterancesAll)
 }
 
@@ -106,8 +88,6 @@ func TestCount(t *testing.T) {
 	t.Run("Podcasts", testPodcastsCount)
 	t.Run("Speakers", testSpeakersCount)
 	t.Run("Turns", testTurnsCount)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksCount)
-	t.Run("UtteranceFragments", testUtteranceFragmentsCount)
 	t.Run("Utterances", testUtterancesCount)
 }
 
@@ -116,8 +96,6 @@ func TestHooks(t *testing.T) {
 	t.Run("Podcasts", testPodcastsHooks)
 	t.Run("Speakers", testSpeakersHooks)
 	t.Run("Turns", testTurnsHooks)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksHooks)
-	t.Run("UtteranceFragments", testUtteranceFragmentsHooks)
 	t.Run("Utterances", testUtterancesHooks)
 }
 
@@ -130,10 +108,6 @@ func TestInsert(t *testing.T) {
 	t.Run("Speakers", testSpeakersInsertWhitelist)
 	t.Run("Turns", testTurnsInsert)
 	t.Run("Turns", testTurnsInsertWhitelist)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksInsert)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksInsertWhitelist)
-	t.Run("UtteranceFragments", testUtteranceFragmentsInsert)
-	t.Run("UtteranceFragments", testUtteranceFragmentsInsertWhitelist)
 	t.Run("Utterances", testUtterancesInsert)
 	t.Run("Utterances", testUtterancesInsertWhitelist)
 }
@@ -143,8 +117,6 @@ func TestInsert(t *testing.T) {
 func TestToOne(t *testing.T) {
 	t.Run("EpisodeToPodcastUsingPodcast", testEpisodeToOnePodcastUsingPodcast)
 	t.Run("TurnToEpisodeUsingEpisode", testTurnToOneEpisodeUsingEpisode)
-	t.Run("UtteranceFragmentLinkToUtteranceFragmentUsingUtteranceFragment", testUtteranceFragmentLinkToOneUtteranceFragmentUsingUtteranceFragment)
-	t.Run("UtteranceFragmentLinkToUtteranceUsingUtterance", testUtteranceFragmentLinkToOneUtteranceUsingUtterance)
 	t.Run("UtteranceToTurnUsingTurn", testUtteranceToOneTurnUsingTurn)
 }
 
@@ -159,8 +131,6 @@ func TestToMany(t *testing.T) {
 	t.Run("PodcastToEpisodes", testPodcastToManyEpisodes)
 	t.Run("SpeakerToUtterances", testSpeakerToManyUtterances)
 	t.Run("TurnToUtterances", testTurnToManyUtterances)
-	t.Run("UtteranceFragmentToUtteranceFragmentLinks", testUtteranceFragmentToManyUtteranceFragmentLinks)
-	t.Run("UtteranceToUtteranceFragmentLinks", testUtteranceToManyUtteranceFragmentLinks)
 	t.Run("UtteranceToSpeakers", testUtteranceToManySpeakers)
 }
 
@@ -169,8 +139,6 @@ func TestToMany(t *testing.T) {
 func TestToOneSet(t *testing.T) {
 	t.Run("EpisodeToPodcastUsingEpisodes", testEpisodeToOneSetOpPodcastUsingPodcast)
 	t.Run("TurnToEpisodeUsingTurns", testTurnToOneSetOpEpisodeUsingEpisode)
-	t.Run("UtteranceFragmentLinkToUtteranceFragmentUsingUtteranceFragmentLinks", testUtteranceFragmentLinkToOneSetOpUtteranceFragmentUsingUtteranceFragment)
-	t.Run("UtteranceFragmentLinkToUtteranceUsingUtteranceFragmentLinks", testUtteranceFragmentLinkToOneSetOpUtteranceUsingUtterance)
 	t.Run("UtteranceToTurnUsingUtterances", testUtteranceToOneSetOpTurnUsingTurn)
 }
 
@@ -193,8 +161,6 @@ func TestToManyAdd(t *testing.T) {
 	t.Run("PodcastToEpisodes", testPodcastToManyAddOpEpisodes)
 	t.Run("SpeakerToUtterances", testSpeakerToManyAddOpUtterances)
 	t.Run("TurnToUtterances", testTurnToManyAddOpUtterances)
-	t.Run("UtteranceFragmentToUtteranceFragmentLinks", testUtteranceFragmentToManyAddOpUtteranceFragmentLinks)
-	t.Run("UtteranceToUtteranceFragmentLinks", testUtteranceToManyAddOpUtteranceFragmentLinks)
 	t.Run("UtteranceToSpeakers", testUtteranceToManyAddOpSpeakers)
 }
 
@@ -217,8 +183,6 @@ func TestReload(t *testing.T) {
 	t.Run("Podcasts", testPodcastsReload)
 	t.Run("Speakers", testSpeakersReload)
 	t.Run("Turns", testTurnsReload)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksReload)
-	t.Run("UtteranceFragments", testUtteranceFragmentsReload)
 	t.Run("Utterances", testUtterancesReload)
 }
 
@@ -227,8 +191,6 @@ func TestReloadAll(t *testing.T) {
 	t.Run("Podcasts", testPodcastsReloadAll)
 	t.Run("Speakers", testSpeakersReloadAll)
 	t.Run("Turns", testTurnsReloadAll)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksReloadAll)
-	t.Run("UtteranceFragments", testUtteranceFragmentsReloadAll)
 	t.Run("Utterances", testUtterancesReloadAll)
 }
 
@@ -237,8 +199,6 @@ func TestSelect(t *testing.T) {
 	t.Run("Podcasts", testPodcastsSelect)
 	t.Run("Speakers", testSpeakersSelect)
 	t.Run("Turns", testTurnsSelect)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksSelect)
-	t.Run("UtteranceFragments", testUtteranceFragmentsSelect)
 	t.Run("Utterances", testUtterancesSelect)
 }
 
@@ -247,8 +207,6 @@ func TestUpdate(t *testing.T) {
 	t.Run("Podcasts", testPodcastsUpdate)
 	t.Run("Speakers", testSpeakersUpdate)
 	t.Run("Turns", testTurnsUpdate)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksUpdate)
-	t.Run("UtteranceFragments", testUtteranceFragmentsUpdate)
 	t.Run("Utterances", testUtterancesUpdate)
 }
 
@@ -257,7 +215,5 @@ func TestSliceUpdateAll(t *testing.T) {
 	t.Run("Podcasts", testPodcastsSliceUpdateAll)
 	t.Run("Speakers", testSpeakersSliceUpdateAll)
 	t.Run("Turns", testTurnsSliceUpdateAll)
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksSliceUpdateAll)
-	t.Run("UtteranceFragments", testUtteranceFragmentsSliceUpdateAll)
 	t.Run("Utterances", testUtterancesSliceUpdateAll)
 }

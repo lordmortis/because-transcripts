@@ -4,21 +4,17 @@
 package datasource_raw
 
 var TableNames = struct {
-	Episodes               string
-	Podcasts               string
-	Speakers               string
-	Turns                  string
-	UtteranceFragmentLinks string
-	UtteranceFragments     string
-	UtteranceSpeakers      string
-	Utterances             string
+	Episodes          string
+	Podcasts          string
+	Speakers          string
+	Turns             string
+	UtteranceSpeakers string
+	Utterances        string
 }{
-	Episodes:               "episodes",
-	Podcasts:               "podcasts",
-	Speakers:               "speakers",
-	Turns:                  "turns",
-	UtteranceFragmentLinks: "utterance_fragment_links",
-	UtteranceFragments:     "utterance_fragments",
-	UtteranceSpeakers:      "utterance_speakers",
-	Utterances:             "utterances",
+	Episodes:          "episodes",
+	Podcasts:          "podcasts",
+	Speakers:          "speakers",
+	Turns:             "turns",
+	UtteranceSpeakers: "utterance_speakers",
+	Utterances:        "utterances",
 }

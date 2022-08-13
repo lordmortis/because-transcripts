@@ -62,26 +62,3 @@ CREATE TABLE "utterance_speakers" (
   CONSTRAINT utterance_id_check FOREIGN KEY (utterance_id) REFERENCES utterances (id),
   CONSTRAINT speaker_id_check FOREIGN KEY (speaker_id) REFERENCES speakers (id)
 );
-
-CREATE TABLE "utterance_fragments" (
-    id BLOB NOT NULL PRIMARY KEY,
-    value TEXT,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
-);
-
-CREATE INDEX utterance_fragment_text ON utterance_fragments(value);
-
-CREATE TABLE "utterance_fragment_links" (
-    utterance_id BLOB NOT NULL,
-    sequence_no INTEGER NOT NULL,
-    utterance_fragment_id BLOB NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
-    PRIMARY KEY (utterance_id, sequence_no),
-    CONSTRAINT utterance_id_check FOREIGN KEY (utterance_id) REFERENCES utterances (id),
-    CONSTRAINT utterance_fragments_id_check FOREIGN KEY (utterance_fragment_id) REFERENCES utterance_fragments (id)
-);
-
-CREATE INDEX utterance_fragment_links_by_utterance_fragment
-    ON utterance_fragment_links(utterance_fragment_id);

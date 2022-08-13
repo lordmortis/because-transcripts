@@ -2,10 +2,23 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Search Results for {{.SearchString}}</title>
+    <title>{{.utteranceCount}} results for {{.search}}</title>
 </head>
 <body>
-    <h1>Results</h1>
-    <div>Search String: {{.SearchString}}</div>
+    <h1>{{.utteranceCount}} results for {{.search}}</h1>
+    <p>Appears in {{.episodeCount}} Episodes</p>
+    <ul>
+        {{- range $key, $episodeMatch := .episodeMatches}}
+        {{- $episode := $episodeMatch.Episode }}
+        {{- $utterances := $episodeMatch.Utterances }}
+        <li><a href="/episode/{{$episode.ID}}">{{$episode.Number}} - {{$episode.Name}}</a>  - aired {{$episode.Date}}
+            <ul>
+                {{- range $utterances }}
+                <li><a href="/episode/{{$episode.ID}}#utterance_{{.ID}}">{{.Utterance}}</a></li>
+                {{- end}}
+            </ul>
+        </li>
+        {{- end}}
+    </ul>
 </body>
 </html>

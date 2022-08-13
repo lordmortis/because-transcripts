@@ -14,9 +14,5 @@ func TestUpsert(t *testing.T) {
 
 	t.Run("Turns", testTurnsUpsert)
 
-	t.Run("UtteranceFragmentLinks", testUtteranceFragmentLinksUpsert)
-
-	t.Run("UtteranceFragments", testUtteranceFragmentsUpsert)
-
 	t.Run("Utterances", testUtterancesUpsert)
 }
