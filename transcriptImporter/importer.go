@@ -193,11 +193,5 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	}
 
 	fileDesc.Close()
-
-	err = os.Remove(filePath)
-	if err != nil {
-		os.Stderr.WriteString(fmt.Sprintf("could not delete file '%s': %s\n", filePath, err))
-	}
-
 	return nil
 }

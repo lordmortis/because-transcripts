@@ -51,15 +51,24 @@ func Init(config config.ImporterConfig, dataSource *datasource.DataSource) (*Imp
 
 func initialImportRoutine(dataSource *datasource.DataSource, filePath string, wg *sync.WaitGroup, errorQueue *zenq.ZenQ[error]) {
 	defer wg.Done()
+	var errorString string
 	err := doImport(filePath, dataSource)
-	if err == nil {
-		return
+	if err != nil {
+		errorString = fmt.Sprintf("could not import '%s'", filePath)
+	} else {
+		err = os.Remove(filePath)
+		if err != nil {
+			errorString = fmt.Sprintf("could not remove file '%s'", filePath)
+		}
 	}
-	errorString := fmt.Sprintf("could not import '%s'", filePath)
+
 	if errorQueue.IsClosed() {
 		return
 	}
-	errorQueue.Write(errors.Because(err, nil, errorString))
+
+	if err != nil {
+		errorQueue.Write(errors.Because(err, nil, errorString))
+	}
 }
 
 func (importer *Importer) Start() error {
@@ -73,6 +82,7 @@ func (importer *Importer) Start() error {
 
 	var wg sync.WaitGroup
 	errorQueue := zenq.New[error](uint32(len(importDirEntries)))
+	errorQueue.Write(nil) //This is to ensure the queue doesn't block on line 86
 	for _, file := range importDirEntries {
 		wg.Add(1)
 		filePath := fmt.Sprintf("%s%c%s", importer.directory, os.PathSeparator, file.Name())
@@ -80,6 +90,7 @@ func (importer *Importer) Start() error {
 	}
 
 	wg.Wait()
+	errorQueue.Close()
 
 	for {
 		data, queueOpen := errorQueue.Read()
@@ -89,7 +100,6 @@ func (importer *Importer) Start() error {
 		if data == nil {
 			continue
 		}
-		errorQueue.Close()
 		return data
 	}
 
