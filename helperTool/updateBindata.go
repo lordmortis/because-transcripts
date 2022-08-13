@@ -60,7 +60,7 @@ func (x *UpdateBindata) Execute(args []string) error {
 	stat, err = os.Stat(migrationsBinDirectory)
 	if err != nil {
 		os.MkdirAll(migrationsBinDirectory, 0700)
-	} else if stat.IsDir() {
+	} else if !stat.IsDir() {
 		return errors.New(fmt.Sprintf("migrations bin directory '%s' isn't a directory", migrationsBinDirectory))
 	}
 
