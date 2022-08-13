@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	lineParseRegex = regexp.MustCompile(`(\[.*?])|( [~–—].*?[~–—])|([:?!.…])`)
+	lineParseRegex = regexp.MustCompile(`(\[.*?])|( [~–—].*?[~–—])|([:;?!.…])`)
 }
 
 func handleParalinguistic(turn *datasource.Turn, sequenceNo int, rawValue string) *datasource.Utterance {

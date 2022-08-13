@@ -90,7 +90,7 @@ func (importer *Importer) Start() error {
 	}
 
 	wg.Wait()
-	errorQueue.Close()
+	errorQueue.CloseAsync()
 
 	for {
 		data, queueOpen := errorQueue.Read()

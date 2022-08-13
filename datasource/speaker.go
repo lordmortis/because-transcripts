@@ -176,4 +176,5 @@ func (model *Speaker) fromDB(dbModel *datasource_raw.Speaker) {
 	model.uuid = UUIDFromBytes(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
 	model.Name = dbModel.Name
+	model.TranscriptName = dbModel.TranscriptName
 }

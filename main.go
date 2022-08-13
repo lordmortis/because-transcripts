@@ -2,9 +2,9 @@ package main
 
 import (
 	"BecauseLanguageBot/datasource"
+	"BecauseLanguageBot/discord"
 	"BecauseLanguageBot/httpServer"
 	"BecauseLanguageBot/transcriptImporter"
-	"BecauseLanguageBot/transcriptSearcher"
 	"flag"
 	"fmt"
 	"os"
@@ -16,7 +16,6 @@ import (
 )
 
 var configData *config.Config
-var searcher *transcriptSearcher.Searcher
 
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
@@ -62,13 +61,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	/*	discordInstance, err := discord.Init(configData.DiscordConfig)
-		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
-			os.Exit(1)
-		}*/
+	discordInstance, err := discord.Init(configData.DiscordConfig)
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Unable to connect to discord: %s\n", err))
+		os.Exit(1)
+	}
 
-	registerTranscriptSearch(searcher)
+	registerTranscriptSearch(dataSource, configData.HttpConfig.BaseURL)
 	registerInfo()
 
 	// Wait here until CTRL-C or other term signal is received.
@@ -77,11 +76,11 @@ func main() {
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	/*	err = discordInstance.Close()
-		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
-			os.Exit(1)
-		}*/
+	err = discordInstance.Close()
+	if err != nil {
+		os.Stderr.WriteString(fmt.Sprintf("Unable to close discord connection cleanly: %s\n", err))
+		os.Exit(1)
+	}
 
 	err = httpInstance.Stop()
 	if err != nil {

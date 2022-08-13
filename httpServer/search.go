@@ -27,6 +27,8 @@ func handleSearch(ctx *gin.Context) {
 		return
 	}
 
+	searchParams.SearchString = fmt.Sprintf(" %s ", searchParams.SearchString)
+
 	utterances, count, err := dataSource.UtterancesWithText(
 		ctx, searchParams.SearchString, -1, -1, true, true, true)
 	if err != nil {

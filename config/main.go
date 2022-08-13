@@ -27,6 +27,7 @@ type ImporterConfig struct {
 type HttpConfig struct {
 	BindAddress string `mapstructure:"bind_address"`
 	Port        int
+	BaseURL     string `mapstructure:"base_url"`
 }
 
 type Config struct {

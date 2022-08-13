@@ -1,17 +1,17 @@
 package main
 
 import (
+	"BecauseLanguageBot/datasource"
 	"BecauseLanguageBot/discord"
-	"BecauseLanguageBot/transcriptSearcher"
+	"context"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"regexp"
+	"strings"
 )
 
-func registerTranscriptSearch(searcher *transcriptSearcher.Searcher) {
-	discord.RegisterCommand("searchTranscripts", "Search transcripts for a given word or phrase", handleTranscriptSearch(searcher))
+func registerTranscriptSearch(dataSource *datasource.DataSource, baseURL string) {
+	discord.RegisterCommand("searchTranscripts", "Search transcripts for a given word or phrase", handleTranscriptSearch(dataSource, baseURL))
 }
 
 var (
@@ -22,7 +22,12 @@ func init() {
 	paralinguisticRegex = regexp.MustCompile(`\[.*\]`)
 }
 
-func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Command {
+type episodeMatch struct {
+	episode    *datasource.Episode
+	utterances []*datasource.Utterance
+}
+
+func handleTranscriptSearch(dataSource *datasource.DataSource, baseURL string) discord.Command {
 	return func(session *discordgo.Session, message *discordgo.Message, parameters string) {
 		channel, err := session.UserChannelCreate(message.Author.ID)
 		if err != nil {
@@ -39,72 +44,69 @@ func handleTranscriptSearch(searcher *transcriptSearcher.Searcher) discord.Comma
 
 		session.ChannelMessageSend(channel.ID, fmt.Sprintf("Searching transcripts for '%s'", parameters))
 
-		episodeResults, err := searcher.Find(parameters)
+		ctx := context.Background()
+
+		utterances, count, err := dataSource.UtterancesWithText(
+			ctx,
+			fmt.Sprintf(" %s ", parameters),
+			5,
+			0,
+			true,
+			true,
+			true,
+		)
+
 		if err != nil {
+			session.ChannelMessageSend(channel.ID, "error when searching for results")
 			discord.LogChatError(message.Author, "error searching for results", err)
+			return
 		}
 
-		totalResults := 0
-		for _, episodeResult := range episodeResults {
-			totalResults += len(episodeResult.Results)
+		if count == 0 {
+			session.ChannelMessageSend(channel.ID, "No Results")
+			return
 		}
 
-		if totalResults > 0 {
-			var msg string
-			if totalResults > 20 {
-				msg = fmt.Sprintf("%d Results - limiting to the first 20", totalResults)
-			} else {
-				msg = fmt.Sprintf("%d Results", totalResults)
+		if count < 5 {
+			session.ChannelMessageSend(channel.ID, fmt.Sprintf("%d results:", count))
+		} else {
+			webSearch := fmt.Sprintf("%s/search?searchString=%s", baseURL, parameters)
+			session.ChannelMessageSend(channel.ID, fmt.Sprintf("%d results, showing first 5:\n to see all results visit %s", count, webSearch))
+		}
+
+		episodeMatches := make(map[string]episodeMatch)
+		for _, utterance := range utterances {
+			aMatch, ok := episodeMatches[utterance.Turn.Episode.ID]
+			if !ok {
+				aMatch = episodeMatch{episode: utterance.Turn.Episode}
 			}
-			session.ChannelMessageSend(channel.ID, msg)
+			aMatch.utterances = append(aMatch.utterances, utterance)
+			episodeMatches[utterance.Turn.Episode.ID] = aMatch
 		}
 
-		printedResults := 0
-
-		sendTranscriptLine := func(line transcriptSearcher.Line) {
+		for _, match := range episodeMatches {
+			episodeLink := fmt.Sprintf("%s/episode/%s", baseURL, match.episode.ID)
 			msg := ""
-			if len(line.Speaker) > 0 {
-				msg = fmt.Sprintf("**%s**: %s", cases.Title(language.English).String(line.Speaker), handleTextLine(line.Text))
-			} else if line.IsParalinguistic {
-				msg = fmt.Sprintf("_%s_", line.Text)
+			if len(match.episode.Name) > 0 {
+				msg = fmt.Sprintf("Episode %d _%s_ (%s):", match.episode.Number, match.episode.Name, episodeLink)
 			} else {
-				msg = handleTextLine(line.Text)
+				msg = fmt.Sprintf("Episode %d (%s):", match.episode.Number, episodeLink)
 			}
-
 			session.ChannelMessageSend(channel.ID, msg)
-		}
-
-		for _, episodeResult := range episodeResults {
-			msg := fmt.Sprintf("Episode: _%s_:", episodeResult.Name)
-			session.ChannelMessageSend(channel.ID, msg)
-
-			for index, result := range episodeResult.Results {
-				session.ChannelMessageSend(channel.ID, fmt.Sprintf("Result %d", index+1))
-				for _, prefix := range result.Pre {
-					sendTranscriptLine(prefix)
+			for _, utterance := range match.utterances {
+				utteranceLink := fmt.Sprintf("%s/episode/%s#utterance_%s", baseURL, match.episode.ID, utterance.ID)
+				msg := ""
+				if len(utterance.Speakers) > 0 {
+					speakerStrings := make([]string, len(utterance.Speakers))
+					for index, speaker := range utterance.Speakers {
+						speakerStrings[index] = fmt.Sprintf("**%s**", speaker.TranscriptName)
+					}
+					msg += strings.Join(speakerStrings, ",") + ": "
 				}
-				for _, prefix := range result.Matching {
-					sendTranscriptLine(prefix)
-				}
-				for _, prefix := range result.Post {
-					sendTranscriptLine(prefix)
-				}
-
-				printedResults++
-				if printedResults > 20 {
-					return
-				}
+				msg += utterance.Utterance
+				msg += fmt.Sprintf("\n(context: %s)", utteranceLink)
+				session.ChannelMessageSend(channel.ID, msg)
 			}
 		}
 	}
-}
-
-func handleTextLine(text string) string {
-	matches := paralinguisticRegex.FindAllStringIndex(text, -1)
-
-	for _, match := range matches {
-		text = text[:match[0]] + "_" + text[match[0]:match[1]] + "_" + text[match[1]:]
-	}
-
-	return text
 }

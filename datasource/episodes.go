@@ -224,6 +224,6 @@ func (model *Episode) fromDB(dbModel *datasource_raw.Episode) {
 	} else {
 		model.Number = -1
 	}
-	model.Name = dbModel.Name.String
+	model.Name = NullableStringToString(dbModel.Name)
 	model.Date = dbModel.AiredAt
 }

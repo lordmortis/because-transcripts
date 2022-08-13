@@ -65,6 +65,7 @@
 <p>{{ .turnCount }} turns</p>
 <ul id="transcript">
     {{ range .turns }}
+    {{- if .Utterances }}
     <li><a class="turnlink" id="turn_{{.SequenceNo}}" href="#turn_{{.SequenceNo}}">link</a>
         {{- if (index .Utterances 0).Speakers }}
         {{- range (index .Utterances 0).Speakers }}<span class="speaker"><a href="/speaker/{{.ID}}">{{.Name}}</a></span>{{- end}}
@@ -77,6 +78,7 @@
             {{- .Utterance }}</a></span>
         {{- end }}
     </li>
+    {{- end }}
     {{ end }}
 </ul>
 </body>
