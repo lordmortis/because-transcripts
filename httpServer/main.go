@@ -86,6 +86,7 @@ func (server *HttpServer) Start(middlewares ...MiddlewareFunc) error {
 
 	server.defaultRouter.GET("/", handleIndex)
 	server.defaultRouter.GET("/episode/:id", handleEpisode)
+	server.defaultRouter.GET("/speaker/:id", handleSpeaker)
 	server.defaultRouter.GET("/search", handleSearch)
 
 	server.httpServer = &http.Server{

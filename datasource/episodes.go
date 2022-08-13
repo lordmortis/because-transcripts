@@ -184,7 +184,7 @@ func (model *Episode) Turns(ctx context.Context, limit int, offset int, includeU
 
 func (model *Episode) Speakers(ctx context.Context, limit int, offset int) ([]*Speaker, int64, error) {
 	var query []qm.QueryMod
-	query = append(query, qm.Distinct("speakers.id"))
+	query = append(query, qm.GroupBy("speakers.id"))
 	query = append(query, qm.InnerJoin("utterance_speakers us ON speakers.id = us.speaker_id"))
 	query = append(query, qm.InnerJoin("utterances u ON us.utterance_id = u.id"))
 	query = append(query, qm.WhereIn("u.turn_id in (SELECT id FROM turns WHERE episode_id = ?)", model.dbModel.ID))

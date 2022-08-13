@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Speaker - {{ .speaker.Name }}</title>
+</head>
+<body>
+<h1>{{ .speaker.Name }}</h1>
+<p>Appears on {{ .episodeCount }} episodes</p>
+<ul>
+    {{- range .episodes }}
+    <li><a href="/episode/{{.ID}}">{{.Number}} - {{.Name}}</a> - aired {{.Date}}</li>
+    {{- end }}
+</ul>
+</body>
+</html>

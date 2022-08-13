@@ -47,6 +47,20 @@ func (source *DataSource) SpeakersAll(ctx context.Context, limit int, offset int
 	return models, count, nil
 }
 
+func (source *DataSource) SpeakerWithId(ctx context.Context, id uuid.UUID) (*Speaker, error) {
+	dbModel, err := datasource_raw.FindSpeaker(ctx, source.connection, id.Bytes())
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	model := Speaker{source: source}
+	model.fromDB(dbModel)
+	return &model, nil
+}
+
 func (source *DataSource) SpeakerWithTranscriptName(ctx context.Context, transcriptName string) (*Speaker, error) {
 	var query []qm.QueryMod
 	query = append(query, qm.WhereIn("transcript_name = ?", transcriptName))
@@ -115,6 +129,46 @@ func (model *Speaker) Update(ctx context.Context) (bool, error) {
 	}
 	model.fromDB(model.dbModel)
 	return true, nil
+}
+
+func (model *Speaker) Episodes(ctx context.Context, limit int, offset int, orderAscending bool) ([]*Episode, int64, error) {
+	var query []qm.QueryMod
+	query = append(query, qm.Distinct("episodes.id"))
+	query = append(query, qm.InnerJoin("turns t on episodes.id = t.episode_id"))
+	query = append(query, qm.InnerJoin("utterances u on u.turn_id = t.id"))
+	query = append(query, qm.InnerJoin("utterance_speakers us on u.id = us.utterance_id"))
+	query = append(query, qm.Where("us.speaker_id = ?", model.dbModel.ID))
+
+	count, err := datasource_raw.Episodes(query...).Count(ctx, model.source.connection)
+	if err != nil {
+		return nil, -1, err
+	}
+
+	if limit > 0 && offset >= 0 {
+		query = append(query, qm.Limit(limit))
+		query = append(query, qm.Offset(offset))
+	}
+
+	if orderAscending {
+		query = append(query, qm.OrderBy("episodes.number"))
+	} else {
+		query = append(query, qm.OrderBy("episodes.number desc"))
+	}
+
+	dbModels, err := datasource_raw.Episodes(query...).All(ctx, model.source.connection)
+	if err != nil {
+		return nil, count, err
+	}
+
+	models := make([]*Episode, len(dbModels))
+	for index := range dbModels {
+		model := Episode{source: model.source}
+		model.fromDB(dbModels[index])
+		models[index] = &model
+	}
+
+	return models, count, nil
+
 }
 
 func (model *Speaker) fromDB(dbModel *datasource_raw.Speaker) {

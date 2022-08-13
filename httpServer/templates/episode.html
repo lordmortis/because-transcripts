@@ -4,12 +4,36 @@
     <meta charset="UTF-8">
     <title>Episode {{ .episode.Number }} - {{ .episode.Name }}</title>
     <style>
-        span.speaker {
+        ul {
+            padding-left: 0;
+        }
+
+        li {
+            padding-left: 40px;
+        }
+
+        li a {
+            color: black;
+            text-decoration: none;
+        }
+
+        a.turnlink {
+            position: absolute;
+            left: 10px;
+            visibility: hidden;
+        }
+
+        li:hover a.turnlink{
             color: blue;
+            visibility: visible;
+        }
+
+        span.speaker {
             padding: 0 5px 5px 0;
         }
 
         span.speaker a {
+            color: blue;
             text-decoration: none;
         }
 
@@ -41,7 +65,7 @@
 <p>{{ .turnCount }} turns</p>
 <ul id="transcript">
     {{ range .turns }}
-    <li><a id="turn_{{.SequenceNo}}"></a>
+    <li><a class="turnlink" id="turn_{{.SequenceNo}}" href="#turn_{{.SequenceNo}}">link</a>
         {{- if (index .Utterances 0).Speakers }}
         {{- range (index .Utterances 0).Speakers }}<span class="speaker"><a href="/speaker/{{.ID}}">{{.Name}}</a></span>{{- end}}
          -
@@ -49,8 +73,8 @@
         {{- range .Utterances }}
             {{- if .IsParalinguistic }}<span class="utterance paralinguistic">
             {{- else }}<span class="utterance">
-            {{- end }}
-            {{- .Utterance }}</span>
+            {{- end }}<a class="utterance" id="utterance_{{.ID}}" href="#utterance_{{.ID}}">
+            {{- .Utterance }}</a></span>
         {{- end }}
     </li>
     {{ end }}
