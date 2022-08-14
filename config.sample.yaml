@@ -8,9 +8,9 @@ http:
   bind_address: 0.0.0.0
   base_url: http://localhost:3000
   port: 3000
-development: false
+development: true
 database:
   path: tmp/development.db
 importer:
-  path: tmp/transcripts
+  directory: tmp/transcripts
   wait_time: 60
