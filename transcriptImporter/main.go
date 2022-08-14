@@ -3,11 +3,11 @@ package transcriptImporter
 import (
 	"BecauseLanguageBot/datasource"
 	"fmt"
+	"github.com/alphadose/zenq/v2"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/alphadose/zenq/v2"
 	"github.com/fsnotify/fsnotify"
 	"gopkg.in/errgo.v2/errors"
 

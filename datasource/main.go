@@ -3,6 +3,7 @@ package datasource
 import (
 	"database/sql"
 	"fmt"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"gopkg.in/errgo.v2/errors"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -36,6 +37,10 @@ func Init(config config.DatabaseConfig, development bool) (*DataSource, error) {
 	_, err = source.connection.Exec("SELECT true")
 	if err != nil {
 		return nil, errors.Because(err, nil, "unable to open database")
+	}
+
+	if development {
+		boil.DebugMode = true
 	}
 
 	return &source, nil

@@ -144,6 +144,9 @@ func (model *Speaker) Episodes(ctx context.Context, limit int, offset int, order
 		return nil, -1, err
 	}
 
+	query = query[1:]
+	query = append(query, qm.GroupBy("episodes.id"))
+
 	if limit > 0 && offset >= 0 {
 		query = append(query, qm.Limit(limit))
 		query = append(query, qm.Offset(offset))
