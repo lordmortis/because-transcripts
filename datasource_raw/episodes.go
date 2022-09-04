@@ -29,7 +29,7 @@ type Episode struct {
 	Number      null.Int    `boil:"number" json:"number,omitempty" toml:"number" yaml:"number,omitempty"`
 	Name        null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
 	AiredAt     time.Time   `boil:"aired_at" json:"aired_at" toml:"aired_at" yaml:"aired_at"`
-	PatreonOnly null.Int    `boil:"patreon_only" json:"patreon_only,omitempty" toml:"patreon_only" yaml:"patreon_only,omitempty"`
+	PatreonOnly bool        `boil:"patreon_only" json:"patreon_only" toml:"patreon_only" yaml:"patreon_only"`
 	CreatedAt   time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt   time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
@@ -171,13 +171,22 @@ func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var EpisodeWhere = struct {
 	ID          whereHelperstring
 	PodcastID   whereHelperstring
 	Number      whereHelpernull_Int
 	Name        whereHelpernull_String
 	AiredAt     whereHelpertime_Time
-	PatreonOnly whereHelpernull_Int
+	PatreonOnly whereHelperbool
 	CreatedAt   whereHelpertime_Time
 	UpdatedAt   whereHelpertime_Time
 }{
@@ -186,7 +195,7 @@ var EpisodeWhere = struct {
 	Number:      whereHelpernull_Int{field: "\"episodes\".\"number\""},
 	Name:        whereHelpernull_String{field: "\"episodes\".\"name\""},
 	AiredAt:     whereHelpertime_Time{field: "\"episodes\".\"aired_at\""},
-	PatreonOnly: whereHelpernull_Int{field: "\"episodes\".\"patreon_only\""},
+	PatreonOnly: whereHelperbool{field: "\"episodes\".\"patreon_only\""},
 	CreatedAt:   whereHelpertime_Time{field: "\"episodes\".\"created_at\""},
 	UpdatedAt:   whereHelpertime_Time{field: "\"episodes\".\"updated_at\""},
 }
