@@ -24,12 +24,12 @@ import (
 
 // Episode is an object representing the database table.
 type Episode struct {
-	ID          []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	PodcastID   []byte      `boil:"podcast_id" json:"podcast_id" toml:"podcast_id" yaml:"podcast_id"`
-	Number      null.Int64  `boil:"number" json:"number,omitempty" toml:"number" yaml:"number,omitempty"`
+	ID          string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	PodcastID   string      `boil:"podcast_id" json:"podcast_id" toml:"podcast_id" yaml:"podcast_id"`
+	Number      null.Int    `boil:"number" json:"number,omitempty" toml:"number" yaml:"number,omitempty"`
 	Name        null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
 	AiredAt     time.Time   `boil:"aired_at" json:"aired_at" toml:"aired_at" yaml:"aired_at"`
-	PatreonOnly null.Int64  `boil:"patreon_only" json:"patreon_only,omitempty" toml:"patreon_only" yaml:"patreon_only,omitempty"`
+	PatreonOnly null.Int    `boil:"patreon_only" json:"patreon_only,omitempty" toml:"patreon_only" yaml:"patreon_only,omitempty"`
 
 	R *episodeR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L episodeL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -69,38 +69,52 @@ var EpisodeTableColumns = struct {
 
 // Generated where
 
-type whereHelper__byte struct{ field string }
+type whereHelperstring struct{ field string }
 
-func (w whereHelper__byte) EQ(x []byte) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelper__byte) NEQ(x []byte) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelper__byte) LT(x []byte) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelper__byte) LTE(x []byte) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelper__byte) GT(x []byte) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelper__byte) GTE(x []byte) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperstring) EQ(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperstring) NEQ(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperstring) LT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperstring) LTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperstring) GT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperstring) IN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
 
-type whereHelpernull_Int64 struct{ field string }
+type whereHelpernull_Int struct{ field string }
 
-func (w whereHelpernull_Int64) EQ(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) EQ(x null.Int) qm.QueryMod {
 	return qmhelper.WhereNullEQ(w.field, false, x)
 }
-func (w whereHelpernull_Int64) NEQ(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) NEQ(x null.Int) qm.QueryMod {
 	return qmhelper.WhereNullEQ(w.field, true, x)
 }
-func (w whereHelpernull_Int64) LT(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) LT(x null.Int) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LT, x)
 }
-func (w whereHelpernull_Int64) LTE(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) LTE(x null.Int) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.LTE, x)
 }
-func (w whereHelpernull_Int64) GT(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) GT(x null.Int) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GT, x)
 }
-func (w whereHelpernull_Int64) GTE(x null.Int64) qm.QueryMod {
+func (w whereHelpernull_Int) GTE(x null.Int) qm.QueryMod {
 	return qmhelper.Where(w.field, qmhelper.GTE, x)
 }
 
-func (w whereHelpernull_Int64) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
-func (w whereHelpernull_Int64) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+func (w whereHelpernull_Int) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_Int) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 type whereHelpernull_String struct{ field string }
 
@@ -148,19 +162,19 @@ func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
 }
 
 var EpisodeWhere = struct {
-	ID          whereHelper__byte
-	PodcastID   whereHelper__byte
-	Number      whereHelpernull_Int64
+	ID          whereHelperstring
+	PodcastID   whereHelperstring
+	Number      whereHelpernull_Int
 	Name        whereHelpernull_String
 	AiredAt     whereHelpertime_Time
-	PatreonOnly whereHelpernull_Int64
+	PatreonOnly whereHelpernull_Int
 }{
-	ID:          whereHelper__byte{field: "\"episodes\".\"id\""},
-	PodcastID:   whereHelper__byte{field: "\"episodes\".\"podcast_id\""},
-	Number:      whereHelpernull_Int64{field: "\"episodes\".\"number\""},
+	ID:          whereHelperstring{field: "\"episodes\".\"id\""},
+	PodcastID:   whereHelperstring{field: "\"episodes\".\"podcast_id\""},
+	Number:      whereHelpernull_Int{field: "\"episodes\".\"number\""},
 	Name:        whereHelpernull_String{field: "\"episodes\".\"name\""},
 	AiredAt:     whereHelpertime_Time{field: "\"episodes\".\"aired_at\""},
-	PatreonOnly: whereHelpernull_Int64{field: "\"episodes\".\"patreon_only\""},
+	PatreonOnly: whereHelpernull_Int{field: "\"episodes\".\"patreon_only\""},
 }
 
 // EpisodeRels is where relationship names are stored.
@@ -544,9 +558,7 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 		if object.R == nil {
 			object.R = &episodeR{}
 		}
-		if !queries.IsNil(object.PodcastID) {
-			args = append(args, object.PodcastID)
-		}
+		args = append(args, object.PodcastID)
 
 	} else {
 	Outer:
@@ -556,14 +568,12 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.PodcastID) {
+				if a == obj.PodcastID {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.PodcastID) {
-				args = append(args, obj.PodcastID)
-			}
+			args = append(args, obj.PodcastID)
 
 		}
 	}
@@ -621,7 +631,7 @@ func (episodeL) LoadPodcast(ctx context.Context, e boil.ContextExecutor, singula
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.PodcastID, foreign.ID) {
+			if local.PodcastID == foreign.ID {
 				local.R.Podcast = foreign
 				if foreign.R == nil {
 					foreign.R = &podcastR{}
@@ -677,7 +687,7 @@ func (episodeL) LoadTurns(ctx context.Context, e boil.ContextExecutor, singular 
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -735,7 +745,7 @@ func (episodeL) LoadTurns(ctx context.Context, e boil.ContextExecutor, singular 
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.ID, foreign.EpisodeID) {
+			if local.ID == foreign.EpisodeID {
 				local.R.Turns = append(local.R.Turns, foreign)
 				if foreign.R == nil {
 					foreign.R = &turnR{}
@@ -762,8 +772,8 @@ func (o *Episode) SetPodcast(ctx context.Context, exec boil.ContextExecutor, ins
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"episodes\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, []string{"podcast_id"}),
-		strmangle.WhereClause("\"", "\"", 0, episodePrimaryKeyColumns),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"podcast_id"}),
+		strmangle.WhereClause("\"", "\"", 2, episodePrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
 
@@ -776,7 +786,7 @@ func (o *Episode) SetPodcast(ctx context.Context, exec boil.ContextExecutor, ins
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.PodcastID, related.ID)
+	o.PodcastID = related.ID
 	if o.R == nil {
 		o.R = &episodeR{
 			Podcast: related,
@@ -804,15 +814,15 @@ func (o *Episode) AddTurns(ctx context.Context, exec boil.ContextExecutor, inser
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.EpisodeID, o.ID)
+			rel.EpisodeID = o.ID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
 				"UPDATE \"turns\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 0, []string{"episode_id"}),
-				strmangle.WhereClause("\"", "\"", 0, turnPrimaryKeyColumns),
+				strmangle.SetParamNames("\"", "\"", 1, []string{"episode_id"}),
+				strmangle.WhereClause("\"", "\"", 2, turnPrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -825,7 +835,7 @@ func (o *Episode) AddTurns(ctx context.Context, exec boil.ContextExecutor, inser
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.EpisodeID, o.ID)
+			rel.EpisodeID = o.ID
 		}
 	}
 
@@ -862,7 +872,7 @@ func Episodes(mods ...qm.QueryMod) episodeQuery {
 
 // FindEpisode retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindEpisode(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectCols ...string) (*Episode, error) {
+func FindEpisode(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Episode, error) {
 	episodeObj := &Episode{}
 
 	sel := "*"
@@ -870,7 +880,7 @@ func FindEpisode(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"episodes\" where \"id\"=?", sel,
+		"select %s from \"episodes\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -996,8 +1006,8 @@ func (o *Episode) Update(ctx context.Context, exec boil.ContextExecutor, columns
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"episodes\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 0, wl),
-			strmangle.WhereClause("\"", "\"", 0, episodePrimaryKeyColumns),
+			strmangle.SetParamNames("\"", "\"", 1, wl),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, episodePrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping(episodeType, episodeMapping, append(wl, episodePrimaryKeyColumns...))
 		if err != nil {
@@ -1077,8 +1087,8 @@ func (o EpisodeSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 	}
 
 	sql := fmt.Sprintf("UPDATE \"episodes\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, episodePrimaryKeyColumns, len(o)))
+		strmangle.SetParamNames("\"", "\"", 1, colNames),
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, episodePrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1151,6 +1161,7 @@ func (o *Episode) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			episodeColumnsWithoutDefault,
 			nzDefaults,
 		)
+
 		update := updateColumns.UpdateColumnSet(
 			episodeAllColumns,
 			episodePrimaryKeyColumns,
@@ -1165,7 +1176,7 @@ func (o *Episode) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			conflict = make([]string, len(episodePrimaryKeyColumns))
 			copy(conflict, episodePrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"episodes\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"episodes\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(episodeType, episodeMapping, insert)
 		if err != nil {
@@ -1224,7 +1235,7 @@ func (o *Episode) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), episodePrimaryKeyMapping)
-	sql := "DELETE FROM \"episodes\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"episodes\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1290,7 +1301,7 @@ func (o EpisodeSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 	}
 
 	sql := "DELETE FROM \"episodes\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, episodePrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, episodePrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1345,7 +1356,7 @@ func (o *EpisodeSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 	}
 
 	sql := "SELECT \"episodes\".* FROM \"episodes\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, episodePrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, episodePrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
@@ -1360,9 +1371,9 @@ func (o *EpisodeSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 }
 
 // EpisodeExists checks if the Episode row exists.
-func EpisodeExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
+func EpisodeExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"episodes\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"episodes\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

@@ -24,7 +24,7 @@ import (
 
 // Podcast is an object representing the database table.
 type Podcast struct {
-	ID   []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID   string      `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Name null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
 
 	R *podcastR `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -50,10 +50,10 @@ var PodcastTableColumns = struct {
 // Generated where
 
 var PodcastWhere = struct {
-	ID   whereHelper__byte
+	ID   whereHelperstring
 	Name whereHelpernull_String
 }{
-	ID:   whereHelper__byte{field: "\"podcasts\".\"id\""},
+	ID:   whereHelperstring{field: "\"podcasts\".\"id\""},
 	Name: whereHelpernull_String{field: "\"podcasts\".\"name\""},
 }
 
@@ -426,7 +426,7 @@ func (podcastL) LoadEpisodes(ctx context.Context, e boil.ContextExecutor, singul
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -484,7 +484,7 @@ func (podcastL) LoadEpisodes(ctx context.Context, e boil.ContextExecutor, singul
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.ID, foreign.PodcastID) {
+			if local.ID == foreign.PodcastID {
 				local.R.Episodes = append(local.R.Episodes, foreign)
 				if foreign.R == nil {
 					foreign.R = &episodeR{}
@@ -506,15 +506,15 @@ func (o *Podcast) AddEpisodes(ctx context.Context, exec boil.ContextExecutor, in
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.PodcastID, o.ID)
+			rel.PodcastID = o.ID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
 				"UPDATE \"episodes\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 0, []string{"podcast_id"}),
-				strmangle.WhereClause("\"", "\"", 0, episodePrimaryKeyColumns),
+				strmangle.SetParamNames("\"", "\"", 1, []string{"podcast_id"}),
+				strmangle.WhereClause("\"", "\"", 2, episodePrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -527,7 +527,7 @@ func (o *Podcast) AddEpisodes(ctx context.Context, exec boil.ContextExecutor, in
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.PodcastID, o.ID)
+			rel.PodcastID = o.ID
 		}
 	}
 
@@ -564,7 +564,7 @@ func Podcasts(mods ...qm.QueryMod) podcastQuery {
 
 // FindPodcast retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectCols ...string) (*Podcast, error) {
+func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Podcast, error) {
 	podcastObj := &Podcast{}
 
 	sel := "*"
@@ -572,7 +572,7 @@ func FindPodcast(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"podcasts\" where \"id\"=?", sel,
+		"select %s from \"podcasts\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -698,8 +698,8 @@ func (o *Podcast) Update(ctx context.Context, exec boil.ContextExecutor, columns
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"podcasts\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 0, wl),
-			strmangle.WhereClause("\"", "\"", 0, podcastPrimaryKeyColumns),
+			strmangle.SetParamNames("\"", "\"", 1, wl),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, podcastPrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping(podcastType, podcastMapping, append(wl, podcastPrimaryKeyColumns...))
 		if err != nil {
@@ -779,8 +779,8 @@ func (o PodcastSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 	}
 
 	sql := fmt.Sprintf("UPDATE \"podcasts\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(o)))
+		strmangle.SetParamNames("\"", "\"", 1, colNames),
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, podcastPrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -853,6 +853,7 @@ func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			podcastColumnsWithoutDefault,
 			nzDefaults,
 		)
+
 		update := updateColumns.UpdateColumnSet(
 			podcastAllColumns,
 			podcastPrimaryKeyColumns,
@@ -867,7 +868,7 @@ func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			conflict = make([]string, len(podcastPrimaryKeyColumns))
 			copy(conflict, podcastPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"podcasts\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"podcasts\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(podcastType, podcastMapping, insert)
 		if err != nil {
@@ -926,7 +927,7 @@ func (o *Podcast) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), podcastPrimaryKeyMapping)
-	sql := "DELETE FROM \"podcasts\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"podcasts\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -992,7 +993,7 @@ func (o PodcastSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 	}
 
 	sql := "DELETE FROM \"podcasts\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, podcastPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1047,7 +1048,7 @@ func (o *PodcastSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 	}
 
 	sql := "SELECT \"podcasts\".* FROM \"podcasts\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, podcastPrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, podcastPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
@@ -1062,9 +1063,9 @@ func (o *PodcastSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 }
 
 // PodcastExists checks if the Podcast row exists.
-func PodcastExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
+func PodcastExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"podcasts\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"podcasts\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

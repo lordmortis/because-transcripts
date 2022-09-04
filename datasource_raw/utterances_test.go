@@ -526,11 +526,11 @@ func testUtteranceToManySpeakers(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)", a.ID, b.ID)
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values ($1, $2)", a.ID, b.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)", a.ID, c.ID)
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values ($1, $2)", a.ID, c.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -542,10 +542,10 @@ func testUtteranceToManySpeakers(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.ID, b.ID) {
+		if v.ID == b.ID {
 			bFound = true
 		}
-		if queries.Equal(v.ID, c.ID) {
+		if v.ID == c.ID {
 			cFound = true
 		}
 	}
@@ -826,7 +826,7 @@ func testUtteranceToOneTurnUsingTurn(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.TurnID, foreign.ID)
+	local.TurnID = foreign.ID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -836,7 +836,7 @@ func testUtteranceToOneTurnUsingTurn(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !queries.Equal(check.ID, foreign.ID) {
+	if check.ID != foreign.ID {
 		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
 	}
 
@@ -898,7 +898,7 @@ func testUtteranceToOneSetOpTurnUsingTurn(t *testing.T) {
 		if x.R.Utterances[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.TurnID, x.ID) {
+		if a.TurnID != x.ID {
 			t.Error("foreign key was wrong value", a.TurnID)
 		}
 
@@ -909,7 +909,7 @@ func testUtteranceToOneSetOpTurnUsingTurn(t *testing.T) {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.TurnID, x.ID) {
+		if a.TurnID != x.ID {
 			t.Error("foreign key was wrong value", a.TurnID, x.ID)
 		}
 	}
@@ -989,7 +989,7 @@ func testUtterancesSelect(t *testing.T) {
 }
 
 var (
-	utteranceDBTypes = map[string]string{`ID`: `BLOB`, `TurnID`: `BLOB`, `SequenceNo`: `INTEGER`, `IsParalinguistic`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `Utterance`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	utteranceDBTypes = map[string]string{`ID`: `uuid`, `TurnID`: `uuid`, `SequenceNo`: `integer`, `IsParalinguistic`: `boolean`, `StartTime`: `integer`, `EndTime`: `integer`, `Utterance`: `text`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_                = bytes.MinRead
 )
 
@@ -1106,6 +1106,7 @@ func testUtterancesSliceUpdateAll(t *testing.T) {
 
 func testUtterancesUpsert(t *testing.T) {
 	t.Parallel()
+
 	if len(utteranceAllColumns) == len(utterancePrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}

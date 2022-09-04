@@ -23,7 +23,7 @@ import (
 
 // Speaker is an object representing the database table.
 type Speaker struct {
-	ID             []byte    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID             string    `boil:"id" json:"id" toml:"id" yaml:"id"`
 	TranscriptName string    `boil:"transcript_name" json:"transcript_name" toml:"transcript_name" yaml:"transcript_name"`
 	Name           string    `boil:"name" json:"name" toml:"name" yaml:"name"`
 	CreatedAt      time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
@@ -63,37 +63,14 @@ var SpeakerTableColumns = struct {
 
 // Generated where
 
-type whereHelperstring struct{ field string }
-
-func (w whereHelperstring) EQ(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperstring) NEQ(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperstring) LT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperstring) LTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperstring) GT(x string) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperstring) GTE(x string) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperstring) IN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelperstring) NIN(slice []string) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
-
 var SpeakerWhere = struct {
-	ID             whereHelper__byte
+	ID             whereHelperstring
 	TranscriptName whereHelperstring
 	Name           whereHelperstring
 	CreatedAt      whereHelpertime_Time
 	UpdatedAt      whereHelpertime_Time
 }{
-	ID:             whereHelper__byte{field: "\"speakers\".\"id\""},
+	ID:             whereHelperstring{field: "\"speakers\".\"id\""},
 	TranscriptName: whereHelperstring{field: "\"speakers\".\"transcript_name\""},
 	Name:           whereHelperstring{field: "\"speakers\".\"name\""},
 	CreatedAt:      whereHelpertime_Time{field: "\"speakers\".\"created_at\""},
@@ -470,7 +447,7 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -500,10 +477,10 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 
 	var resultSlice []*Utterance
 
-	var localJoinCols [][]byte
+	var localJoinCols []string
 	for results.Next() {
 		one := new(Utterance)
-		var localJoinCol []byte
+		var localJoinCol string
 
 		err = results.Scan(&one.ID, &one.TurnID, &one.SequenceNo, &one.IsParalinguistic, &one.StartTime, &one.EndTime, &one.Utterance, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
 		if err != nil {
@@ -545,7 +522,7 @@ func (speakerL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, sing
 	for i, foreign := range resultSlice {
 		localJoinCol := localJoinCols[i]
 		for _, local := range slice {
-			if queries.Equal(local.ID, localJoinCol) {
+			if local.ID == localJoinCol {
 				local.R.Utterances = append(local.R.Utterances, foreign)
 				if foreign.R == nil {
 					foreign.R = &utteranceR{}
@@ -574,7 +551,7 @@ func (o *Speaker) AddUtterances(ctx context.Context, exec boil.ContextExecutor, 
 	}
 
 	for _, rel := range related {
-		query := "insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)"
+		query := "insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values ($1, $2)"
 		values := []interface{}{o.ID, rel.ID}
 
 		if boil.IsDebug(ctx) {
@@ -614,7 +591,7 @@ func (o *Speaker) AddUtterances(ctx context.Context, exec boil.ContextExecutor, 
 // Replaces o.R.Utterances with related.
 // Sets related.R.Speakers's Utterances accordingly.
 func (o *Speaker) SetUtterances(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Utterance) error {
-	query := "delete from \"utterance_speakers\" where \"speaker_id\" = ?"
+	query := "delete from \"utterance_speakers\" where \"speaker_id\" = $1"
 	values := []interface{}{o.ID}
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -644,7 +621,7 @@ func (o *Speaker) RemoveUtterances(ctx context.Context, exec boil.ContextExecuto
 
 	var err error
 	query := fmt.Sprintf(
-		"delete from \"utterance_speakers\" where \"speaker_id\" = ? and \"utterance_id\" in (%s)",
+		"delete from \"utterance_speakers\" where \"speaker_id\" = $1 and \"utterance_id\" in (%s)",
 		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
 	)
 	values := []interface{}{o.ID}
@@ -690,7 +667,7 @@ func removeUtterancesFromSpeakersSlice(o *Speaker, related []*Utterance) {
 			continue
 		}
 		for i, ri := range rel.R.Speakers {
-			if !queries.Equal(o.ID, ri.ID) {
+			if o.ID != ri.ID {
 				continue
 			}
 
@@ -717,7 +694,7 @@ func Speakers(mods ...qm.QueryMod) speakerQuery {
 
 // FindSpeaker retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectCols ...string) (*Speaker, error) {
+func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Speaker, error) {
 	speakerObj := &Speaker{}
 
 	sel := "*"
@@ -725,7 +702,7 @@ func FindSpeaker(ctx context.Context, exec boil.ContextExecutor, iD []byte, sele
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"speakers\" where \"id\"=?", sel,
+		"select %s from \"speakers\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -867,8 +844,8 @@ func (o *Speaker) Update(ctx context.Context, exec boil.ContextExecutor, columns
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"speakers\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 0, wl),
-			strmangle.WhereClause("\"", "\"", 0, speakerPrimaryKeyColumns),
+			strmangle.SetParamNames("\"", "\"", 1, wl),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, speakerPrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping(speakerType, speakerMapping, append(wl, speakerPrimaryKeyColumns...))
 		if err != nil {
@@ -948,8 +925,8 @@ func (o SpeakerSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 	}
 
 	sql := fmt.Sprintf("UPDATE \"speakers\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(o)))
+		strmangle.SetParamNames("\"", "\"", 1, colNames),
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, speakerPrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1030,6 +1007,7 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			speakerColumnsWithoutDefault,
 			nzDefaults,
 		)
+
 		update := updateColumns.UpdateColumnSet(
 			speakerAllColumns,
 			speakerPrimaryKeyColumns,
@@ -1044,7 +1022,7 @@ func (o *Speaker) Upsert(ctx context.Context, exec boil.ContextExecutor, updateO
 			conflict = make([]string, len(speakerPrimaryKeyColumns))
 			copy(conflict, speakerPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"speakers\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"speakers\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(speakerType, speakerMapping, insert)
 		if err != nil {
@@ -1103,7 +1081,7 @@ func (o *Speaker) Delete(ctx context.Context, exec boil.ContextExecutor) (int64,
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), speakerPrimaryKeyMapping)
-	sql := "DELETE FROM \"speakers\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"speakers\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1169,7 +1147,7 @@ func (o SpeakerSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) 
 	}
 
 	sql := "DELETE FROM \"speakers\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, speakerPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1224,7 +1202,7 @@ func (o *SpeakerSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 	}
 
 	sql := "SELECT \"speakers\".* FROM \"speakers\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, speakerPrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, speakerPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
@@ -1239,9 +1217,9 @@ func (o *SpeakerSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor)
 }
 
 // SpeakerExists checks if the Speaker row exists.
-func SpeakerExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
+func SpeakerExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"speakers\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"speakers\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

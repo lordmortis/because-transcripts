@@ -10,7 +10,11 @@ http:
   port: 3000
 development: true
 database:
-  path: tmp/development.db
+  hostname: 127.0.0.1
+  port: 15432
+  database: <DATABASE>
+  username: <DBUSER>
+  password: <DBPASS>
 importer:
   directory: tmp/transcripts
   wait_time: 60

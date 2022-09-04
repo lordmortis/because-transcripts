@@ -12,14 +12,13 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/kevinburke/go-bindata v3.23.0+incompatible
-	github.com/mattn/go-sqlite3 v1.14.10
+	github.com/lib/pq v1.10.0
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/viper v1.12.0
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/randomize v0.0.1
 	github.com/volatiletech/sqlboiler/v4 v4.12.0
 	github.com/volatiletech/strmangle v0.0.4
-	golang.org/x/text v0.3.7
 	gopkg.in/errgo.v2 v2.1.0
 	modernc.org/sqlite v1.14.5
 )
@@ -58,6 +57,7 @@ require (
 	golang.org/x/mod v0.5.0 // indirect
 	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2 // indirect
 	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	golang.org/x/xerrors v0.0.0-20220517211312-f3a8303e98df // indirect
 	google.golang.org/protobuf v1.28.0 // indirect

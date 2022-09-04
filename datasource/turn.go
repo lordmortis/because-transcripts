@@ -2,10 +2,10 @@ package datasource
 
 import (
 	"BecauseLanguageBot/datasource_raw"
-	"bytes"
 	"context"
 	"github.com/gofrs/uuid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"strings"
 	"time"
 )
 
@@ -31,29 +31,29 @@ func (model *Turn) Update(ctx context.Context) (bool, error) {
 		model.uuid, _ = uuid.NewV4()
 		model.ID = UUIDToBase64(model.uuid)
 		dbModel := datasource_raw.Turn{
-			ID:         model.uuid.Bytes(),
-			SequenceNo: int64(model.SequenceNo),
+			ID:         model.uuid.String(),
+			SequenceNo: model.SequenceNo,
 			EpisodeID:  model.Episode.dbModel.ID,
-			StartTime:  TimeMillisToNullableInt64(model.StartTime),
-			EndTime:    TimeMillisToNullableInt64(model.StartTime),
+			StartTime:  TimeMillisToNullableInt(model.StartTime),
+			EndTime:    TimeMillisToNullableInt(model.StartTime),
 		}
 
 		model.dbModel = &dbModel
 	} else {
-		if dbModel.SequenceNo != int64(model.SequenceNo) {
-			dbModel.SequenceNo = int64(model.SequenceNo)
+		if dbModel.SequenceNo != model.SequenceNo {
+			dbModel.SequenceNo = model.SequenceNo
 		}
 
-		if !bytes.Equal(dbModel.EpisodeID, model.Episode.dbModel.ID) {
+		if !strings.EqualFold(dbModel.EpisodeID, model.Episode.dbModel.ID) {
 			dbModel.EpisodeID = model.Episode.dbModel.ID
 		}
 
-		if !NullableInt64ToTimeMillis(dbModel.StartTime).Equal(*model.StartTime) {
-			dbModel.StartTime = TimeMillisToNullableInt64(model.StartTime)
+		if !NullableIntToTimeMillis(dbModel.StartTime).Equal(*model.StartTime) {
+			dbModel.StartTime = TimeMillisToNullableInt(model.StartTime)
 		}
 
-		if !NullableInt64ToTimeMillis(dbModel.EndTime).Equal(*model.EndTime) {
-			dbModel.EndTime = TimeMillisToNullableInt64(model.EndTime)
+		if !NullableIntToTimeMillis(dbModel.EndTime).Equal(*model.EndTime) {
+			dbModel.EndTime = TimeMillisToNullableInt(model.EndTime)
 		}
 	}
 
@@ -89,11 +89,11 @@ func (model *Turn) NewUtterance() *Utterance {
 
 func (model *Turn) fromDB(dbModel *datasource_raw.Turn) {
 	model.dbModel = dbModel
-	model.uuid = UUIDFromBytes(model.dbModel.ID)
+	model.uuid = UUIDFromString(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
-	model.SequenceNo = int(dbModel.SequenceNo)
-	model.StartTime = NullableInt64ToTimeMillis(dbModel.StartTime)
-	model.EndTime = NullableInt64ToTimeMillis(dbModel.EndTime)
+	model.SequenceNo = dbModel.SequenceNo
+	model.StartTime = NullableIntToTimeMillis(dbModel.StartTime)
+	model.EndTime = NullableIntToTimeMillis(dbModel.EndTime)
 
 	if dbModel.R == nil {
 		return

@@ -74,7 +74,7 @@ func (model *Podcast) Update(ctx context.Context) (bool, error) {
 		insert = true
 		model.uuid, _ = uuid.NewV4()
 		model.ID = UUIDToBase64(model.uuid)
-		dbModel := datasource_raw.Podcast{ID: model.uuid.Bytes()}
+		dbModel := datasource_raw.Podcast{ID: model.uuid.String()}
 		if len(model.Name) > 0 {
 			dbModel.Name = null.StringFrom(model.Name)
 		}
@@ -130,7 +130,7 @@ func (model *Podcast) NewEpisode() *Episode {
 
 func (model *Podcast) fromDB(dbModel *datasource_raw.Podcast) {
 	model.dbModel = dbModel
-	model.uuid = UUIDFromBytes(model.dbModel.ID)
+	model.uuid = UUIDFromString(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
 	model.Name = dbModel.Name.String
 }

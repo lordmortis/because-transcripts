@@ -24,12 +24,12 @@ import (
 
 // Utterance is an object representing the database table.
 type Utterance struct {
-	ID               []byte      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	TurnID           []byte      `boil:"turn_id" json:"turn_id" toml:"turn_id" yaml:"turn_id"`
-	SequenceNo       int64       `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
-	IsParalinguistic int64       `boil:"is_paralinguistic" json:"is_paralinguistic" toml:"is_paralinguistic" yaml:"is_paralinguistic"`
-	StartTime        null.Int64  `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
-	EndTime          null.Int64  `boil:"end_time" json:"end_time,omitempty" toml:"end_time" yaml:"end_time,omitempty"`
+	ID               string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	TurnID           string      `boil:"turn_id" json:"turn_id" toml:"turn_id" yaml:"turn_id"`
+	SequenceNo       int         `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
+	IsParalinguistic bool        `boil:"is_paralinguistic" json:"is_paralinguistic" toml:"is_paralinguistic" yaml:"is_paralinguistic"`
+	StartTime        null.Int    `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
+	EndTime          null.Int    `boil:"end_time" json:"end_time,omitempty" toml:"end_time" yaml:"end_time,omitempty"`
 	Utterance        null.String `boil:"utterance" json:"utterance,omitempty" toml:"utterance" yaml:"utterance,omitempty"`
 	CreatedAt        time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
 	UpdatedAt        time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
@@ -84,23 +84,32 @@ var UtteranceTableColumns = struct {
 
 // Generated where
 
+type whereHelperbool struct{ field string }
+
+func (w whereHelperbool) EQ(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperbool) NEQ(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperbool) LT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+
 var UtteranceWhere = struct {
-	ID               whereHelper__byte
-	TurnID           whereHelper__byte
-	SequenceNo       whereHelperint64
-	IsParalinguistic whereHelperint64
-	StartTime        whereHelpernull_Int64
-	EndTime          whereHelpernull_Int64
+	ID               whereHelperstring
+	TurnID           whereHelperstring
+	SequenceNo       whereHelperint
+	IsParalinguistic whereHelperbool
+	StartTime        whereHelpernull_Int
+	EndTime          whereHelpernull_Int
 	Utterance        whereHelpernull_String
 	CreatedAt        whereHelpertime_Time
 	UpdatedAt        whereHelpertime_Time
 }{
-	ID:               whereHelper__byte{field: "\"utterances\".\"id\""},
-	TurnID:           whereHelper__byte{field: "\"utterances\".\"turn_id\""},
-	SequenceNo:       whereHelperint64{field: "\"utterances\".\"sequence_no\""},
-	IsParalinguistic: whereHelperint64{field: "\"utterances\".\"is_paralinguistic\""},
-	StartTime:        whereHelpernull_Int64{field: "\"utterances\".\"start_time\""},
-	EndTime:          whereHelpernull_Int64{field: "\"utterances\".\"end_time\""},
+	ID:               whereHelperstring{field: "\"utterances\".\"id\""},
+	TurnID:           whereHelperstring{field: "\"utterances\".\"turn_id\""},
+	SequenceNo:       whereHelperint{field: "\"utterances\".\"sequence_no\""},
+	IsParalinguistic: whereHelperbool{field: "\"utterances\".\"is_paralinguistic\""},
+	StartTime:        whereHelpernull_Int{field: "\"utterances\".\"start_time\""},
+	EndTime:          whereHelpernull_Int{field: "\"utterances\".\"end_time\""},
 	Utterance:        whereHelpernull_String{field: "\"utterances\".\"utterance\""},
 	CreatedAt:        whereHelpertime_Time{field: "\"utterances\".\"created_at\""},
 	UpdatedAt:        whereHelpertime_Time{field: "\"utterances\".\"updated_at\""},
@@ -488,9 +497,7 @@ func (utteranceL) LoadTurn(ctx context.Context, e boil.ContextExecutor, singular
 		if object.R == nil {
 			object.R = &utteranceR{}
 		}
-		if !queries.IsNil(object.TurnID) {
-			args = append(args, object.TurnID)
-		}
+		args = append(args, object.TurnID)
 
 	} else {
 	Outer:
@@ -500,14 +507,12 @@ func (utteranceL) LoadTurn(ctx context.Context, e boil.ContextExecutor, singular
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.TurnID) {
+				if a == obj.TurnID {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.TurnID) {
-				args = append(args, obj.TurnID)
-			}
+			args = append(args, obj.TurnID)
 
 		}
 	}
@@ -565,7 +570,7 @@ func (utteranceL) LoadTurn(ctx context.Context, e boil.ContextExecutor, singular
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.TurnID, foreign.ID) {
+			if local.TurnID == foreign.ID {
 				local.R.Turn = foreign
 				if foreign.R == nil {
 					foreign.R = &turnR{}
@@ -621,7 +626,7 @@ func (utteranceL) LoadSpeakers(ctx context.Context, e boil.ContextExecutor, sing
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -651,10 +656,10 @@ func (utteranceL) LoadSpeakers(ctx context.Context, e boil.ContextExecutor, sing
 
 	var resultSlice []*Speaker
 
-	var localJoinCols [][]byte
+	var localJoinCols []string
 	for results.Next() {
 		one := new(Speaker)
-		var localJoinCol []byte
+		var localJoinCol string
 
 		err = results.Scan(&one.ID, &one.TranscriptName, &one.Name, &one.CreatedAt, &one.UpdatedAt, &localJoinCol)
 		if err != nil {
@@ -696,7 +701,7 @@ func (utteranceL) LoadSpeakers(ctx context.Context, e boil.ContextExecutor, sing
 	for i, foreign := range resultSlice {
 		localJoinCol := localJoinCols[i]
 		for _, local := range slice {
-			if queries.Equal(local.ID, localJoinCol) {
+			if local.ID == localJoinCol {
 				local.R.Speakers = append(local.R.Speakers, foreign)
 				if foreign.R == nil {
 					foreign.R = &speakerR{}
@@ -723,8 +728,8 @@ func (o *Utterance) SetTurn(ctx context.Context, exec boil.ContextExecutor, inse
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"utterances\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, []string{"turn_id"}),
-		strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"turn_id"}),
+		strmangle.WhereClause("\"", "\"", 2, utterancePrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
 
@@ -737,7 +742,7 @@ func (o *Utterance) SetTurn(ctx context.Context, exec boil.ContextExecutor, inse
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.TurnID, related.ID)
+	o.TurnID = related.ID
 	if o.R == nil {
 		o.R = &utteranceR{
 			Turn: related,
@@ -772,7 +777,7 @@ func (o *Utterance) AddSpeakers(ctx context.Context, exec boil.ContextExecutor, 
 	}
 
 	for _, rel := range related {
-		query := "insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values (?, ?)"
+		query := "insert into \"utterance_speakers\" (\"utterance_id\", \"speaker_id\") values ($1, $2)"
 		values := []interface{}{o.ID, rel.ID}
 
 		if boil.IsDebug(ctx) {
@@ -812,7 +817,7 @@ func (o *Utterance) AddSpeakers(ctx context.Context, exec boil.ContextExecutor, 
 // Replaces o.R.Speakers with related.
 // Sets related.R.Utterances's Speakers accordingly.
 func (o *Utterance) SetSpeakers(ctx context.Context, exec boil.ContextExecutor, insert bool, related ...*Speaker) error {
-	query := "delete from \"utterance_speakers\" where \"utterance_id\" = ?"
+	query := "delete from \"utterance_speakers\" where \"utterance_id\" = $1"
 	values := []interface{}{o.ID}
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -842,7 +847,7 @@ func (o *Utterance) RemoveSpeakers(ctx context.Context, exec boil.ContextExecuto
 
 	var err error
 	query := fmt.Sprintf(
-		"delete from \"utterance_speakers\" where \"utterance_id\" = ? and \"speaker_id\" in (%s)",
+		"delete from \"utterance_speakers\" where \"utterance_id\" = $1 and \"speaker_id\" in (%s)",
 		strmangle.Placeholders(dialect.UseIndexPlaceholders, len(related), 2, 1),
 	)
 	values := []interface{}{o.ID}
@@ -888,7 +893,7 @@ func removeSpeakersFromUtterancesSlice(o *Utterance, related []*Speaker) {
 			continue
 		}
 		for i, ri := range rel.R.Utterances {
-			if !queries.Equal(o.ID, ri.ID) {
+			if o.ID != ri.ID {
 				continue
 			}
 
@@ -915,7 +920,7 @@ func Utterances(mods ...qm.QueryMod) utteranceQuery {
 
 // FindUtterance retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindUtterance(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectCols ...string) (*Utterance, error) {
+func FindUtterance(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Utterance, error) {
 	utteranceObj := &Utterance{}
 
 	sel := "*"
@@ -923,7 +928,7 @@ func FindUtterance(ctx context.Context, exec boil.ContextExecutor, iD []byte, se
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"utterances\" where \"id\"=?", sel,
+		"select %s from \"utterances\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -1065,8 +1070,8 @@ func (o *Utterance) Update(ctx context.Context, exec boil.ContextExecutor, colum
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"utterances\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 0, wl),
-			strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
+			strmangle.SetParamNames("\"", "\"", 1, wl),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, utterancePrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping(utteranceType, utteranceMapping, append(wl, utterancePrimaryKeyColumns...))
 		if err != nil {
@@ -1146,8 +1151,8 @@ func (o UtteranceSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor
 	}
 
 	sql := fmt.Sprintf("UPDATE \"utterances\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, utterancePrimaryKeyColumns, len(o)))
+		strmangle.SetParamNames("\"", "\"", 1, colNames),
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, utterancePrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1228,6 +1233,7 @@ func (o *Utterance) Upsert(ctx context.Context, exec boil.ContextExecutor, updat
 			utteranceColumnsWithoutDefault,
 			nzDefaults,
 		)
+
 		update := updateColumns.UpdateColumnSet(
 			utteranceAllColumns,
 			utterancePrimaryKeyColumns,
@@ -1242,7 +1248,7 @@ func (o *Utterance) Upsert(ctx context.Context, exec boil.ContextExecutor, updat
 			conflict = make([]string, len(utterancePrimaryKeyColumns))
 			copy(conflict, utterancePrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"utterances\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"utterances\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(utteranceType, utteranceMapping, insert)
 		if err != nil {
@@ -1301,7 +1307,7 @@ func (o *Utterance) Delete(ctx context.Context, exec boil.ContextExecutor) (int6
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), utterancePrimaryKeyMapping)
-	sql := "DELETE FROM \"utterances\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"utterances\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1367,7 +1373,7 @@ func (o UtteranceSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor
 	}
 
 	sql := "DELETE FROM \"utterances\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, utterancePrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, utterancePrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1422,7 +1428,7 @@ func (o *UtteranceSlice) ReloadAll(ctx context.Context, exec boil.ContextExecuto
 	}
 
 	sql := "SELECT \"utterances\".* FROM \"utterances\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, utterancePrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, utterancePrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
@@ -1437,9 +1443,9 @@ func (o *UtteranceSlice) ReloadAll(ctx context.Context, exec boil.ContextExecuto
 }
 
 // UtteranceExists checks if the Utterance row exists.
-func UtteranceExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
+func UtteranceExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"utterances\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"utterances\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

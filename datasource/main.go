@@ -5,23 +5,28 @@ import (
 	"fmt"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"gopkg.in/errgo.v2/errors"
+	"strconv"
 
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/lib/pq"
 
 	"BecauseLanguageBot/config"
 )
 
 type DataSource struct {
-	dbPath           string
 	connectionString string
 	connection       *sql.DB
 }
 
 func Init(config config.DatabaseConfig, development bool) (*DataSource, error) {
 	var err error
+
+	var connString = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		config.Username, config.Password,
+		config.Hostname, strconv.FormatUint(uint64(config.Port), 10),
+		config.Database)
+
 	source := DataSource{
-		dbPath:           config.Path,
-		connectionString: fmt.Sprintf("sqlite3://%s", config.Path),
+		connectionString: connString,
 	}
 
 	err = source.migrate(development)
@@ -29,7 +34,7 @@ func Init(config config.DatabaseConfig, development bool) (*DataSource, error) {
 		return nil, errors.Because(err, nil, "unable to migrate database")
 	}
 
-	source.connection, err = sql.Open("sqlite3", source.dbPath)
+	source.connection, err = sql.Open("postgres", source.connectionString)
 	if err != nil {
 		return nil, errors.Because(err, nil, "unable to open database")
 	}

@@ -1,52 +1,52 @@
 CREATE TABLE "podcasts" (
-    id BLOB NOT NULL PRIMARY KEY,
+    id uuid NOT NULL PRIMARY KEY,
     name TEXT
 );
 
 CREATE TABLE "episodes" (
-    id BLOB NOT NULL PRIMARY KEY,
-    podcast_id BLOB NOT NULL,
+    id uuid NOT NULL PRIMARY KEY,
+    podcast_id uuid NOT NULL,
     number INTEGER,
     name TEXT,
     aired_at DATE NOT NULL,
     patreon_only INTEGER,
-    CONSTRAINT postcast_id_check FOREIGN KEY (podcast_id) REFERENCES podcasts (id)
+    CONSTRAINT podcast_id_check FOREIGN KEY (podcast_id) REFERENCES podcasts (id)
 );
 
 CREATE INDEX episodes_by_podcast ON episodes(podcast_id);
 CREATE INDEX episode_order ON episodes(number);
 
 CREATE TABLE "speakers" (
-    id BLOB NOT NULL PRIMARY KEY,
+    id uuid NOT NULL PRIMARY KEY,
     transcript_name TEXT NOT NULL,
     name TEXT NOT NULL,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL
 );
 
 CREATE TABLE "turns" (
-    id BLOB NOT NULL PRIMARY KEY,
-    episode_id BLOB NOT NULL,
+    id uuid NOT NULL PRIMARY KEY,
+    episode_id uuid NOT NULL,
     sequence_no INTEGER NOT NULL,
     start_time INTEGER,
     end_time INTEGER,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT episode_id_check FOREIGN KEY (episode_id) REFERENCES episodes (id)
 );
 
 CREATE INDEX turns_by_episode ON turns(episode_id);
 
 CREATE TABLE "utterances" (
-    id BLOB NOT NULL PRIMARY KEY,
-    turn_id BLOB NOT NULL,
+    id uuid NOT NULL PRIMARY KEY,
+    turn_id uuid NOT NULL,
     sequence_no INTEGER NOT NULL,
-    is_paralinguistic INTEGER NOT NULL,
+    is_paralinguistic bool NOT NULL,
     start_time INTEGER,
     end_time INTEGER,
     utterance TEXT,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME NOT NULL,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT turn_id_check FOREIGN KEY (turn_id) REFERENCES turns (id)
 );
 
@@ -56,8 +56,8 @@ CREATE INDEX utterance_sequence_order ON utterances(sequence_no);
 CREATE INDEX utterances_by_turns ON utterances(turn_id);
 
 CREATE TABLE "utterance_speakers" (
-  utterance_id BLOB NOT NULL,
-  speaker_id BLOB NOT NULL,
+  utterance_id uuid NOT NULL,
+  speaker_id uuid NOT NULL,
   PRIMARY KEY (utterance_id, speaker_id),
   CONSTRAINT utterance_id_check FOREIGN KEY (utterance_id) REFERENCES utterances (id),
   CONSTRAINT speaker_id_check FOREIGN KEY (speaker_id) REFERENCES speakers (id)

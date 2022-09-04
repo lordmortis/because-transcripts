@@ -526,11 +526,11 @@ func testSpeakerToManyUtterances(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)", a.ID, b.ID)
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values ($1, $2)", a.ID, b.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values (?, ?)", a.ID, c.ID)
+	_, err = tx.Exec("insert into \"utterance_speakers\" (\"speaker_id\", \"utterance_id\") values ($1, $2)", a.ID, c.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -542,10 +542,10 @@ func testSpeakerToManyUtterances(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.ID, b.ID) {
+		if v.ID == b.ID {
 			bFound = true
 		}
-		if queries.Equal(v.ID, c.ID) {
+		if v.ID == c.ID {
 			cFound = true
 		}
 	}
@@ -880,7 +880,7 @@ func testSpeakersSelect(t *testing.T) {
 }
 
 var (
-	speakerDBTypes = map[string]string{`ID`: `BLOB`, `TranscriptName`: `TEXT`, `Name`: `TEXT`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	speakerDBTypes = map[string]string{`ID`: `uuid`, `TranscriptName`: `text`, `Name`: `text`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_              = bytes.MinRead
 )
 
@@ -997,6 +997,7 @@ func testSpeakersSliceUpdateAll(t *testing.T) {
 
 func testSpeakersUpsert(t *testing.T) {
 	t.Parallel()
+
 	if len(speakerAllColumns) == len(speakerPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}
