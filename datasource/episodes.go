@@ -154,13 +154,15 @@ func (model *Episode) Turns(ctx context.Context, limit int, offset int, includeU
 		return nil, -1, err
 	}
 
+	query = append(query, qm.OrderBy("turns.sequence_no"))
+
 	if limit > 0 && offset >= 0 {
 		query = append(query, qm.Limit(limit))
 		query = append(query, qm.Offset(offset))
 	}
 
 	if includeUtterances {
-		query = append(query, qm.Load("Utterances"))
+		query = append(query, qm.Load("Utterances", qm.OrderBy("utterances.sequence_no")))
 	}
 
 	if includeUtterances && includeSpeakers {
