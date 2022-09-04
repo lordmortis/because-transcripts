@@ -18,7 +18,8 @@ func handleParalinguistic(turn *datasource.Turn, sequenceNo int, rawValue string
 	utterance := turn.NewUtterance()
 	utterance.SequenceNo = sequenceNo
 	utterance.IsParalinguistic = true
-	utterance.Utterance = rawValue[1 : len(rawValue)-1]
+	runeValue := []rune(rawValue)
+	utterance.Utterance = string(runeValue[1 : len(runeValue)-1])
 	return utterance
 }
 
@@ -51,13 +52,14 @@ func handleSpokenLine(turn *datasource.Turn, rawValue string) ([]*datasource.Utt
 	for _, match := range matches {
 		if match[2] != -1 {
 			if match[2] > lastIndex {
-				utterances, sequenceNo = handleUtterance(turn, utterances, sequenceNo, rawValue[lastIndex:match[2]-1])
+				runeValue := []rune(rawValue[lastIndex:match[2]])
+				utterances, sequenceNo = handleUtterance(turn, utterances, sequenceNo, string(runeValue[0:len(runeValue)-1]))
 			}
 			utterances = append(utterances, handleParalinguistic(turn, sequenceNo, rawValue[match[2]:match[3]]))
 			sequenceNo++
 		} else if match[4] != -1 {
 			if match[4] > lastIndex {
-				utterances, sequenceNo = handleUtterance(turn, utterances, sequenceNo, rawValue[lastIndex:match[4]-1])
+				utterances, sequenceNo = handleUtterance(turn, utterances, sequenceNo, rawValue[lastIndex:match[4]])
 			}
 			utterances, sequenceNo = handleUtterance(turn, utterances, sequenceNo, rawValue[match[4]:match[5]])
 		} else if match[6] != -1 {

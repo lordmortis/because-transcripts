@@ -1,6 +1,8 @@
 CREATE TABLE "podcasts" (
     id uuid NOT NULL PRIMARY KEY,
-    name TEXT
+    name TEXT,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL
 );
 
 CREATE TABLE "episodes" (
@@ -9,7 +11,9 @@ CREATE TABLE "episodes" (
     number INTEGER,
     name TEXT,
     aired_at DATE NOT NULL,
-    patreon_only INTEGER,
+    patreon_only bool NOT NULL DEFAULT false,
+    created_at timestamp NOT NULL,
+    updated_at timestamp NOT NULL,
     CONSTRAINT podcast_id_check FOREIGN KEY (podcast_id) REFERENCES podcasts (id)
 );
 
