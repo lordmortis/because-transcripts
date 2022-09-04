@@ -41,7 +41,7 @@ CREATE TABLE "utterances" (
     id uuid NOT NULL PRIMARY KEY,
     turn_id uuid NOT NULL,
     sequence_no INTEGER NOT NULL,
-    is_paralinguistic INTEGER NOT NULL,
+    is_paralinguistic bool NOT NULL,
     start_time INTEGER,
     end_time INTEGER,
     utterance TEXT,

@@ -29,15 +29,15 @@ type Episode struct {
 func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int, ascending bool) ([]*Episode, int64, error) {
 	var query []qm.QueryMod
 
+	count, err := datasource_raw.Episodes(query...).Count(ctx, source.connection)
+	if err != nil {
+		return nil, -1, err
+	}
+
 	if ascending {
 		query = append(query, qm.OrderBy("episodes.number"))
 	} else {
 		query = append(query, qm.OrderBy("episodes.number desc"))
-	}
-
-	count, err := datasource_raw.Episodes(query...).Count(ctx, source.connection)
-	if err != nil {
-		return nil, -1, err
 	}
 
 	if limit > 0 && offset >= 0 {
@@ -61,7 +61,7 @@ func (source *DataSource) EpisodesAll(ctx context.Context, limit int, offset int
 }
 
 func (source *DataSource) EpisodeWithId(ctx context.Context, id uuid.UUID) (*Episode, error) {
-	dbModel, err := datasource_raw.FindEpisode(ctx, source.connection, id.Bytes())
+	dbModel, err := datasource_raw.FindEpisode(ctx, source.connection, id.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -82,13 +82,13 @@ func (model *Episode) Update(ctx context.Context) (bool, error) {
 		insert = true
 		model.uuid, _ = uuid.NewV4()
 		model.ID = UUIDToBase64(model.uuid)
-		dbModel := datasource_raw.Episode{ID: model.uuid.Bytes(), PodcastID: model.podcast.dbModel.ID}
+		dbModel := datasource_raw.Episode{ID: model.uuid.String(), PodcastID: model.podcast.dbModel.ID}
 		if len(model.Name) > 0 {
 			dbModel.Name = null.StringFrom(model.Name)
 		}
 
 		if model.Number > -1 {
-			dbModel.Number = null.Int64From(int64(model.Number))
+			dbModel.Number = null.IntFrom(model.Number)
 		}
 		model.dbModel = &dbModel
 	} else {
@@ -105,12 +105,12 @@ func (model *Episode) Update(ctx context.Context) (bool, error) {
 			}
 		}
 
-		if (model.Number == -1 && model.dbModel.Number.Valid) || (model.Number != int(model.dbModel.Number.Int64)) {
+		if (model.Number == -1 && model.dbModel.Number.Valid) || (model.Number != model.dbModel.Number.Int) {
 			if model.Number == -1 {
-				model.dbModel.Number.Int64 = 0
+				model.dbModel.Number.Int = 0
 				model.dbModel.Number.Valid = false
 			} else {
-				model.dbModel.Number = null.Int64From(int64(model.Number))
+				model.dbModel.Number = null.IntFrom(model.Number)
 			}
 		}
 	}
@@ -217,10 +217,10 @@ func (model *Episode) Speakers(ctx context.Context, limit int, offset int) ([]*S
 
 func (model *Episode) fromDB(dbModel *datasource_raw.Episode) {
 	model.dbModel = dbModel
-	model.uuid = UUIDFromBytes(model.dbModel.ID)
+	model.uuid = UUIDFromString(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
 	if dbModel.Number.Valid {
-		model.Number = int(dbModel.Number.Int64)
+		model.Number = dbModel.Number.Int
 	} else {
 		model.Number = -1
 	}

@@ -519,8 +519,9 @@ func testEpisodeToManyTurns(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.EpisodeID, a.ID)
-	queries.Assign(&c.EpisodeID, a.ID)
+	b.EpisodeID = a.ID
+	c.EpisodeID = a.ID
+
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -535,10 +536,10 @@ func testEpisodeToManyTurns(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.EpisodeID, b.EpisodeID) {
+		if v.EpisodeID == b.EpisodeID {
 			bFound = true
 		}
-		if queries.Equal(v.EpisodeID, c.EpisodeID) {
+		if v.EpisodeID == c.EpisodeID {
 			cFound = true
 		}
 	}
@@ -616,10 +617,10 @@ func testEpisodeToManyAddOpTurns(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.ID, first.EpisodeID) {
+		if a.ID != first.EpisodeID {
 			t.Error("foreign key was wrong value", a.ID, first.EpisodeID)
 		}
-		if !queries.Equal(a.ID, second.EpisodeID) {
+		if a.ID != second.EpisodeID {
 			t.Error("foreign key was wrong value", a.ID, second.EpisodeID)
 		}
 
@@ -666,7 +667,7 @@ func testEpisodeToOnePodcastUsingPodcast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.PodcastID, foreign.ID)
+	local.PodcastID = foreign.ID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -676,7 +677,7 @@ func testEpisodeToOnePodcastUsingPodcast(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !queries.Equal(check.ID, foreign.ID) {
+	if check.ID != foreign.ID {
 		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
 	}
 
@@ -738,7 +739,7 @@ func testEpisodeToOneSetOpPodcastUsingPodcast(t *testing.T) {
 		if x.R.Episodes[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.PodcastID, x.ID) {
+		if a.PodcastID != x.ID {
 			t.Error("foreign key was wrong value", a.PodcastID)
 		}
 
@@ -749,7 +750,7 @@ func testEpisodeToOneSetOpPodcastUsingPodcast(t *testing.T) {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.PodcastID, x.ID) {
+		if a.PodcastID != x.ID {
 			t.Error("foreign key was wrong value", a.PodcastID, x.ID)
 		}
 	}
@@ -829,7 +830,7 @@ func testEpisodesSelect(t *testing.T) {
 }
 
 var (
-	episodeDBTypes = map[string]string{`ID`: `BLOB`, `PodcastID`: `BLOB`, `Number`: `INTEGER`, `Name`: `TEXT`, `AiredAt`: `DATE`, `PatreonOnly`: `INTEGER`}
+	episodeDBTypes = map[string]string{`ID`: `uuid`, `PodcastID`: `uuid`, `Number`: `integer`, `Name`: `text`, `AiredAt`: `date`, `PatreonOnly`: `integer`}
 	_              = bytes.MinRead
 )
 
@@ -946,6 +947,7 @@ func testEpisodesSliceUpdateAll(t *testing.T) {
 
 func testEpisodesUpsert(t *testing.T) {
 	t.Parallel()
+
 	if len(episodeAllColumns) == len(episodePrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}

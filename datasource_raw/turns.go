@@ -24,13 +24,13 @@ import (
 
 // Turn is an object representing the database table.
 type Turn struct {
-	ID         []byte     `boil:"id" json:"id" toml:"id" yaml:"id"`
-	EpisodeID  []byte     `boil:"episode_id" json:"episode_id" toml:"episode_id" yaml:"episode_id"`
-	SequenceNo int64      `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
-	StartTime  null.Int64 `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
-	EndTime    null.Int64 `boil:"end_time" json:"end_time,omitempty" toml:"end_time" yaml:"end_time,omitempty"`
-	CreatedAt  time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt  time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	ID         string    `boil:"id" json:"id" toml:"id" yaml:"id"`
+	EpisodeID  string    `boil:"episode_id" json:"episode_id" toml:"episode_id" yaml:"episode_id"`
+	SequenceNo int       `boil:"sequence_no" json:"sequence_no" toml:"sequence_no" yaml:"sequence_no"`
+	StartTime  null.Int  `boil:"start_time" json:"start_time,omitempty" toml:"start_time" yaml:"start_time,omitempty"`
+	EndTime    null.Int  `boil:"end_time" json:"end_time,omitempty" toml:"end_time" yaml:"end_time,omitempty"`
+	CreatedAt  time.Time `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt  time.Time `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *turnR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L turnL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -74,22 +74,22 @@ var TurnTableColumns = struct {
 
 // Generated where
 
-type whereHelperint64 struct{ field string }
+type whereHelperint struct{ field string }
 
-func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
+func (w whereHelperint) EQ(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint) NEQ(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint) LT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint) LTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint) GT(x int) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint) GTE(x int) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint) IN(slice []int) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
 	}
 	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
 }
-func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
+func (w whereHelperint) NIN(slice []int) qm.QueryMod {
 	values := make([]interface{}, 0, len(slice))
 	for _, value := range slice {
 		values = append(values, value)
@@ -98,19 +98,19 @@ func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
 }
 
 var TurnWhere = struct {
-	ID         whereHelper__byte
-	EpisodeID  whereHelper__byte
-	SequenceNo whereHelperint64
-	StartTime  whereHelpernull_Int64
-	EndTime    whereHelpernull_Int64
+	ID         whereHelperstring
+	EpisodeID  whereHelperstring
+	SequenceNo whereHelperint
+	StartTime  whereHelpernull_Int
+	EndTime    whereHelpernull_Int
 	CreatedAt  whereHelpertime_Time
 	UpdatedAt  whereHelpertime_Time
 }{
-	ID:         whereHelper__byte{field: "\"turns\".\"id\""},
-	EpisodeID:  whereHelper__byte{field: "\"turns\".\"episode_id\""},
-	SequenceNo: whereHelperint64{field: "\"turns\".\"sequence_no\""},
-	StartTime:  whereHelpernull_Int64{field: "\"turns\".\"start_time\""},
-	EndTime:    whereHelpernull_Int64{field: "\"turns\".\"end_time\""},
+	ID:         whereHelperstring{field: "\"turns\".\"id\""},
+	EpisodeID:  whereHelperstring{field: "\"turns\".\"episode_id\""},
+	SequenceNo: whereHelperint{field: "\"turns\".\"sequence_no\""},
+	StartTime:  whereHelpernull_Int{field: "\"turns\".\"start_time\""},
+	EndTime:    whereHelpernull_Int{field: "\"turns\".\"end_time\""},
 	CreatedAt:  whereHelpertime_Time{field: "\"turns\".\"created_at\""},
 	UpdatedAt:  whereHelpertime_Time{field: "\"turns\".\"updated_at\""},
 }
@@ -496,9 +496,7 @@ func (turnL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singular b
 		if object.R == nil {
 			object.R = &turnR{}
 		}
-		if !queries.IsNil(object.EpisodeID) {
-			args = append(args, object.EpisodeID)
-		}
+		args = append(args, object.EpisodeID)
 
 	} else {
 	Outer:
@@ -508,14 +506,12 @@ func (turnL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singular b
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.EpisodeID) {
+				if a == obj.EpisodeID {
 					continue Outer
 				}
 			}
 
-			if !queries.IsNil(obj.EpisodeID) {
-				args = append(args, obj.EpisodeID)
-			}
+			args = append(args, obj.EpisodeID)
 
 		}
 	}
@@ -573,7 +569,7 @@ func (turnL) LoadEpisode(ctx context.Context, e boil.ContextExecutor, singular b
 
 	for _, local := range slice {
 		for _, foreign := range resultSlice {
-			if queries.Equal(local.EpisodeID, foreign.ID) {
+			if local.EpisodeID == foreign.ID {
 				local.R.Episode = foreign
 				if foreign.R == nil {
 					foreign.R = &episodeR{}
@@ -629,7 +625,7 @@ func (turnL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, singula
 			}
 
 			for _, a := range args {
-				if queries.Equal(a, obj.ID) {
+				if a == obj.ID {
 					continue Outer
 				}
 			}
@@ -687,7 +683,7 @@ func (turnL) LoadUtterances(ctx context.Context, e boil.ContextExecutor, singula
 
 	for _, foreign := range resultSlice {
 		for _, local := range slice {
-			if queries.Equal(local.ID, foreign.TurnID) {
+			if local.ID == foreign.TurnID {
 				local.R.Utterances = append(local.R.Utterances, foreign)
 				if foreign.R == nil {
 					foreign.R = &utteranceR{}
@@ -714,8 +710,8 @@ func (o *Turn) SetEpisode(ctx context.Context, exec boil.ContextExecutor, insert
 
 	updateQuery := fmt.Sprintf(
 		"UPDATE \"turns\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, []string{"episode_id"}),
-		strmangle.WhereClause("\"", "\"", 0, turnPrimaryKeyColumns),
+		strmangle.SetParamNames("\"", "\"", 1, []string{"episode_id"}),
+		strmangle.WhereClause("\"", "\"", 2, turnPrimaryKeyColumns),
 	)
 	values := []interface{}{related.ID, o.ID}
 
@@ -728,7 +724,7 @@ func (o *Turn) SetEpisode(ctx context.Context, exec boil.ContextExecutor, insert
 		return errors.Wrap(err, "failed to update local table")
 	}
 
-	queries.Assign(&o.EpisodeID, related.ID)
+	o.EpisodeID = related.ID
 	if o.R == nil {
 		o.R = &turnR{
 			Episode: related,
@@ -756,15 +752,15 @@ func (o *Turn) AddUtterances(ctx context.Context, exec boil.ContextExecutor, ins
 	var err error
 	for _, rel := range related {
 		if insert {
-			queries.Assign(&rel.TurnID, o.ID)
+			rel.TurnID = o.ID
 			if err = rel.Insert(ctx, exec, boil.Infer()); err != nil {
 				return errors.Wrap(err, "failed to insert into foreign table")
 			}
 		} else {
 			updateQuery := fmt.Sprintf(
 				"UPDATE \"utterances\" SET %s WHERE %s",
-				strmangle.SetParamNames("\"", "\"", 0, []string{"turn_id"}),
-				strmangle.WhereClause("\"", "\"", 0, utterancePrimaryKeyColumns),
+				strmangle.SetParamNames("\"", "\"", 1, []string{"turn_id"}),
+				strmangle.WhereClause("\"", "\"", 2, utterancePrimaryKeyColumns),
 			)
 			values := []interface{}{o.ID, rel.ID}
 
@@ -777,7 +773,7 @@ func (o *Turn) AddUtterances(ctx context.Context, exec boil.ContextExecutor, ins
 				return errors.Wrap(err, "failed to update foreign table")
 			}
 
-			queries.Assign(&rel.TurnID, o.ID)
+			rel.TurnID = o.ID
 		}
 	}
 
@@ -814,7 +810,7 @@ func Turns(mods ...qm.QueryMod) turnQuery {
 
 // FindTurn retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindTurn(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectCols ...string) (*Turn, error) {
+func FindTurn(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Turn, error) {
 	turnObj := &Turn{}
 
 	sel := "*"
@@ -822,7 +818,7 @@ func FindTurn(ctx context.Context, exec boil.ContextExecutor, iD []byte, selectC
 		sel = strings.Join(strmangle.IdentQuoteSlice(dialect.LQ, dialect.RQ, selectCols), ",")
 	}
 	query := fmt.Sprintf(
-		"select %s from \"turns\" where \"id\"=?", sel,
+		"select %s from \"turns\" where \"id\"=$1", sel,
 	)
 
 	q := queries.Raw(query, iD)
@@ -964,8 +960,8 @@ func (o *Turn) Update(ctx context.Context, exec boil.ContextExecutor, columns bo
 		}
 
 		cache.query = fmt.Sprintf("UPDATE \"turns\" SET %s WHERE %s",
-			strmangle.SetParamNames("\"", "\"", 0, wl),
-			strmangle.WhereClause("\"", "\"", 0, turnPrimaryKeyColumns),
+			strmangle.SetParamNames("\"", "\"", 1, wl),
+			strmangle.WhereClause("\"", "\"", len(wl)+1, turnPrimaryKeyColumns),
 		)
 		cache.valueMapping, err = queries.BindMapping(turnType, turnMapping, append(wl, turnPrimaryKeyColumns...))
 		if err != nil {
@@ -1045,8 +1041,8 @@ func (o TurnSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, col
 	}
 
 	sql := fmt.Sprintf("UPDATE \"turns\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 0, colNames),
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, turnPrimaryKeyColumns, len(o)))
+		strmangle.SetParamNames("\"", "\"", 1, colNames),
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), len(colNames)+1, turnPrimaryKeyColumns, len(o)))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1127,6 +1123,7 @@ func (o *Turn) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnCo
 			turnColumnsWithoutDefault,
 			nzDefaults,
 		)
+
 		update := updateColumns.UpdateColumnSet(
 			turnAllColumns,
 			turnPrimaryKeyColumns,
@@ -1141,7 +1138,7 @@ func (o *Turn) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnCo
 			conflict = make([]string, len(turnPrimaryKeyColumns))
 			copy(conflict, turnPrimaryKeyColumns)
 		}
-		cache.query = buildUpsertQuerySQLite(dialect, "\"turns\"", updateOnConflict, ret, update, conflict, insert)
+		cache.query = buildUpsertQueryPostgres(dialect, "\"turns\"", updateOnConflict, ret, update, conflict, insert)
 
 		cache.valueMapping, err = queries.BindMapping(turnType, turnMapping, insert)
 		if err != nil {
@@ -1200,7 +1197,7 @@ func (o *Turn) Delete(ctx context.Context, exec boil.ContextExecutor) (int64, er
 	}
 
 	args := queries.ValuesFromMapping(reflect.Indirect(reflect.ValueOf(o)), turnPrimaryKeyMapping)
-	sql := "DELETE FROM \"turns\" WHERE \"id\"=?"
+	sql := "DELETE FROM \"turns\" WHERE \"id\"=$1"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1266,7 +1263,7 @@ func (o TurnSlice) DeleteAll(ctx context.Context, exec boil.ContextExecutor) (in
 	}
 
 	sql := "DELETE FROM \"turns\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, turnPrimaryKeyColumns, len(o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, turnPrimaryKeyColumns, len(o))
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)
@@ -1321,7 +1318,7 @@ func (o *TurnSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) er
 	}
 
 	sql := "SELECT \"turns\".* FROM \"turns\" WHERE " +
-		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 0, turnPrimaryKeyColumns, len(*o))
+		strmangle.WhereClauseRepeated(string(dialect.LQ), string(dialect.RQ), 1, turnPrimaryKeyColumns, len(*o))
 
 	q := queries.Raw(sql, args...)
 
@@ -1336,9 +1333,9 @@ func (o *TurnSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) er
 }
 
 // TurnExists checks if the Turn row exists.
-func TurnExists(ctx context.Context, exec boil.ContextExecutor, iD []byte) (bool, error) {
+func TurnExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
-	sql := "select exists(select 1 from \"turns\" where \"id\"=? limit 1)"
+	sql := "select exists(select 1 from \"turns\" where \"id\"=$1 limit 1)"
 
 	if boil.IsDebug(ctx) {
 		writer := boil.DebugWriterFrom(ctx)

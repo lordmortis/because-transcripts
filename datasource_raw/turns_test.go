@@ -519,8 +519,9 @@ func testTurnToManyUtterances(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.TurnID, a.ID)
-	queries.Assign(&c.TurnID, a.ID)
+	b.TurnID = a.ID
+	c.TurnID = a.ID
+
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -535,10 +536,10 @@ func testTurnToManyUtterances(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.TurnID, b.TurnID) {
+		if v.TurnID == b.TurnID {
 			bFound = true
 		}
-		if queries.Equal(v.TurnID, c.TurnID) {
+		if v.TurnID == c.TurnID {
 			cFound = true
 		}
 	}
@@ -616,10 +617,10 @@ func testTurnToManyAddOpUtterances(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.ID, first.TurnID) {
+		if a.ID != first.TurnID {
 			t.Error("foreign key was wrong value", a.ID, first.TurnID)
 		}
-		if !queries.Equal(a.ID, second.TurnID) {
+		if a.ID != second.TurnID {
 			t.Error("foreign key was wrong value", a.ID, second.TurnID)
 		}
 
@@ -666,7 +667,7 @@ func testTurnToOneEpisodeUsingEpisode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&local.EpisodeID, foreign.ID)
+	local.EpisodeID = foreign.ID
 	if err := local.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -676,7 +677,7 @@ func testTurnToOneEpisodeUsingEpisode(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !queries.Equal(check.ID, foreign.ID) {
+	if check.ID != foreign.ID {
 		t.Errorf("want: %v, got %v", foreign.ID, check.ID)
 	}
 
@@ -738,7 +739,7 @@ func testTurnToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 		if x.R.Turns[0] != &a {
 			t.Error("failed to append to foreign relationship struct")
 		}
-		if !queries.Equal(a.EpisodeID, x.ID) {
+		if a.EpisodeID != x.ID {
 			t.Error("foreign key was wrong value", a.EpisodeID)
 		}
 
@@ -749,7 +750,7 @@ func testTurnToOneSetOpEpisodeUsingEpisode(t *testing.T) {
 			t.Fatal("failed to reload", err)
 		}
 
-		if !queries.Equal(a.EpisodeID, x.ID) {
+		if a.EpisodeID != x.ID {
 			t.Error("foreign key was wrong value", a.EpisodeID, x.ID)
 		}
 	}
@@ -829,7 +830,7 @@ func testTurnsSelect(t *testing.T) {
 }
 
 var (
-	turnDBTypes = map[string]string{`ID`: `BLOB`, `EpisodeID`: `BLOB`, `SequenceNo`: `INTEGER`, `StartTime`: `INTEGER`, `EndTime`: `INTEGER`, `CreatedAt`: `DATETIME`, `UpdatedAt`: `DATETIME`}
+	turnDBTypes = map[string]string{`ID`: `uuid`, `EpisodeID`: `uuid`, `SequenceNo`: `integer`, `StartTime`: `integer`, `EndTime`: `integer`, `CreatedAt`: `timestamp without time zone`, `UpdatedAt`: `timestamp without time zone`}
 	_           = bytes.MinRead
 )
 
@@ -946,6 +947,7 @@ func testTurnsSliceUpdateAll(t *testing.T) {
 
 func testTurnsUpsert(t *testing.T) {
 	t.Parallel()
+
 	if len(turnAllColumns) == len(turnPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}

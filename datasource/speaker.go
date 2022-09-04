@@ -48,7 +48,7 @@ func (source *DataSource) SpeakersAll(ctx context.Context, limit int, offset int
 }
 
 func (source *DataSource) SpeakerWithId(ctx context.Context, id uuid.UUID) (*Speaker, error) {
-	dbModel, err := datasource_raw.FindSpeaker(ctx, source.connection, id.Bytes())
+	dbModel, err := datasource_raw.FindSpeaker(ctx, source.connection, id.String())
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
@@ -94,7 +94,7 @@ func (model *Speaker) Update(ctx context.Context) (bool, error) {
 		model.uuid, _ = uuid.NewV4()
 		model.ID = UUIDToBase64(model.uuid)
 		dbModel := datasource_raw.Speaker{
-			ID:             model.uuid.Bytes(),
+			ID:             model.uuid.String(),
 			TranscriptName: model.TranscriptName,
 			Name:           model.Name,
 		}
@@ -176,7 +176,7 @@ func (model *Speaker) Episodes(ctx context.Context, limit int, offset int, order
 
 func (model *Speaker) fromDB(dbModel *datasource_raw.Speaker) {
 	model.dbModel = dbModel
-	model.uuid = UUIDFromBytes(model.dbModel.ID)
+	model.uuid = UUIDFromString(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
 	model.Name = dbModel.Name
 	model.TranscriptName = dbModel.TranscriptName

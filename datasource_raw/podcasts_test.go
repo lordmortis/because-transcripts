@@ -519,8 +519,9 @@ func testPodcastToManyEpisodes(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	queries.Assign(&b.PodcastID, a.ID)
-	queries.Assign(&c.PodcastID, a.ID)
+	b.PodcastID = a.ID
+	c.PodcastID = a.ID
+
 	if err = b.Insert(ctx, tx, boil.Infer()); err != nil {
 		t.Fatal(err)
 	}
@@ -535,10 +536,10 @@ func testPodcastToManyEpisodes(t *testing.T) {
 
 	bFound, cFound := false, false
 	for _, v := range check {
-		if queries.Equal(v.PodcastID, b.PodcastID) {
+		if v.PodcastID == b.PodcastID {
 			bFound = true
 		}
-		if queries.Equal(v.PodcastID, c.PodcastID) {
+		if v.PodcastID == c.PodcastID {
 			cFound = true
 		}
 	}
@@ -616,10 +617,10 @@ func testPodcastToManyAddOpEpisodes(t *testing.T) {
 		first := x[0]
 		second := x[1]
 
-		if !queries.Equal(a.ID, first.PodcastID) {
+		if a.ID != first.PodcastID {
 			t.Error("foreign key was wrong value", a.ID, first.PodcastID)
 		}
-		if !queries.Equal(a.ID, second.PodcastID) {
+		if a.ID != second.PodcastID {
 			t.Error("foreign key was wrong value", a.ID, second.PodcastID)
 		}
 
@@ -721,7 +722,7 @@ func testPodcastsSelect(t *testing.T) {
 }
 
 var (
-	podcastDBTypes = map[string]string{`ID`: `BLOB`, `Name`: `TEXT`}
+	podcastDBTypes = map[string]string{`ID`: `uuid`, `Name`: `text`}
 	_              = bytes.MinRead
 )
 
@@ -838,6 +839,7 @@ func testPodcastsSliceUpdateAll(t *testing.T) {
 
 func testPodcastsUpsert(t *testing.T) {
 	t.Parallel()
+
 	if len(podcastAllColumns) == len(podcastPrimaryKeyColumns) {
 		t.Skip("Skipping table with only primary key columns")
 	}

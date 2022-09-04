@@ -2,12 +2,12 @@ package datasource
 
 import (
 	"BecauseLanguageBot/datasource_raw"
-	"bytes"
 	"context"
 	"fmt"
 	"github.com/gofrs/uuid"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+	"strings"
 	"time"
 )
 
@@ -75,36 +75,36 @@ func (model *Utterance) Update(ctx context.Context) (bool, error) {
 		model.uuid, _ = uuid.NewV4()
 		model.ID = UUIDToBase64(model.uuid)
 		dbModel := datasource_raw.Utterance{
-			ID:         model.uuid.Bytes(),
+			ID:         model.uuid.String(),
 			TurnID:     model.Turn.dbModel.ID,
-			SequenceNo: int64(model.SequenceNo),
-			StartTime:  TimeMillisToNullableInt64(model.StartTime),
-			EndTime:    TimeMillisToNullableInt64(model.StartTime),
+			SequenceNo: model.SequenceNo,
+			StartTime:  TimeMillisToNullableInt(model.StartTime),
+			EndTime:    TimeMillisToNullableInt(model.StartTime),
 		}
 
-		dbModel.IsParalinguistic = BoolToInt64(model.IsParalinguistic)
+		dbModel.IsParalinguistic = model.IsParalinguistic
 		dbModel.Utterance = StringToNullableString(model.Utterance)
 
 		model.dbModel = &dbModel
 	} else {
-		if !bytes.Equal(model.Turn.dbModel.ID, dbModel.TurnID) {
+		if !strings.EqualFold(model.Turn.dbModel.ID, dbModel.TurnID) {
 			dbModel.TurnID = model.Turn.dbModel.ID
 		}
 
-		if dbModel.SequenceNo != int64(model.SequenceNo) {
-			dbModel.SequenceNo = int64(model.SequenceNo)
+		if dbModel.SequenceNo != model.SequenceNo {
+			dbModel.SequenceNo = model.SequenceNo
 		}
 
-		if BoolToInt64(model.IsParalinguistic) != dbModel.IsParalinguistic {
-			dbModel.IsParalinguistic = BoolToInt64(model.IsParalinguistic)
+		if model.IsParalinguistic != dbModel.IsParalinguistic {
+			dbModel.IsParalinguistic = model.IsParalinguistic
 		}
 
-		if !NullableInt64ToTimeMillisEquals(dbModel.StartTime, model.StartTime) {
-			dbModel.StartTime = TimeMillisToNullableInt64(model.StartTime)
+		if !NullableIntToTimeMillisEquals(dbModel.StartTime, model.StartTime) {
+			dbModel.StartTime = TimeMillisToNullableInt(model.StartTime)
 		}
 
-		if !NullableInt64ToTimeMillisEquals(dbModel.EndTime, model.EndTime) {
-			dbModel.EndTime = TimeMillisToNullableInt64(model.EndTime)
+		if !NullableIntToTimeMillisEquals(dbModel.EndTime, model.EndTime) {
+			dbModel.EndTime = TimeMillisToNullableInt(model.EndTime)
 		}
 
 		if NullableStringToString(dbModel.Utterance) != model.Utterance {
@@ -147,10 +147,10 @@ func (model *Utterance) Update(ctx context.Context) (bool, error) {
 
 func (model *Utterance) fromDB(dbModel *datasource_raw.Utterance) {
 	model.dbModel = dbModel
-	model.uuid = UUIDFromBytes(model.dbModel.ID)
+	model.uuid = UUIDFromString(model.dbModel.ID)
 	model.ID = UUIDToBase64(model.uuid)
-	model.SequenceNo = int(dbModel.SequenceNo)
-	model.IsParalinguistic = dbModel.IsParalinguistic == 1
+	model.SequenceNo = dbModel.SequenceNo
+	model.IsParalinguistic = dbModel.IsParalinguistic
 	if dbModel.Utterance.Valid {
 		model.Utterance = dbModel.Utterance.String
 	} else {
