@@ -22,7 +22,7 @@ var (
 func init() {
 	groupSpeakerRegex = regexp.MustCompile(`[Aa][Nn][Dd]`)
 	spokenLineRegex = regexp.MustCompile(`^(([A-Za-z]*\s?[A-Za-z]*\s?[A-Za-z]*\s?):)(.*)$`)
-	paralinguisticLineRegex = regexp.MustCompile(`^\[.*]$`)
+	paralinguisticLineRegex = regexp.MustCompile(`^\[.*]\s$`)
 }
 
 func doImport(filePath string, source *datasource.DataSource) error {
