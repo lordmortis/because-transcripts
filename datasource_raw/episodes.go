@@ -30,6 +30,8 @@ type Episode struct {
 	Name        null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
 	AiredAt     time.Time   `boil:"aired_at" json:"aired_at" toml:"aired_at" yaml:"aired_at"`
 	PatreonOnly null.Int    `boil:"patreon_only" json:"patreon_only,omitempty" toml:"patreon_only" yaml:"patreon_only,omitempty"`
+	CreatedAt   time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt   time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *episodeR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L episodeL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -42,6 +44,8 @@ var EpisodeColumns = struct {
 	Name        string
 	AiredAt     string
 	PatreonOnly string
+	CreatedAt   string
+	UpdatedAt   string
 }{
 	ID:          "id",
 	PodcastID:   "podcast_id",
@@ -49,6 +53,8 @@ var EpisodeColumns = struct {
 	Name:        "name",
 	AiredAt:     "aired_at",
 	PatreonOnly: "patreon_only",
+	CreatedAt:   "created_at",
+	UpdatedAt:   "updated_at",
 }
 
 var EpisodeTableColumns = struct {
@@ -58,6 +64,8 @@ var EpisodeTableColumns = struct {
 	Name        string
 	AiredAt     string
 	PatreonOnly string
+	CreatedAt   string
+	UpdatedAt   string
 }{
 	ID:          "episodes.id",
 	PodcastID:   "episodes.podcast_id",
@@ -65,6 +73,8 @@ var EpisodeTableColumns = struct {
 	Name:        "episodes.name",
 	AiredAt:     "episodes.aired_at",
 	PatreonOnly: "episodes.patreon_only",
+	CreatedAt:   "episodes.created_at",
+	UpdatedAt:   "episodes.updated_at",
 }
 
 // Generated where
@@ -168,6 +178,8 @@ var EpisodeWhere = struct {
 	Name        whereHelpernull_String
 	AiredAt     whereHelpertime_Time
 	PatreonOnly whereHelpernull_Int
+	CreatedAt   whereHelpertime_Time
+	UpdatedAt   whereHelpertime_Time
 }{
 	ID:          whereHelperstring{field: "\"episodes\".\"id\""},
 	PodcastID:   whereHelperstring{field: "\"episodes\".\"podcast_id\""},
@@ -175,6 +187,8 @@ var EpisodeWhere = struct {
 	Name:        whereHelpernull_String{field: "\"episodes\".\"name\""},
 	AiredAt:     whereHelpertime_Time{field: "\"episodes\".\"aired_at\""},
 	PatreonOnly: whereHelpernull_Int{field: "\"episodes\".\"patreon_only\""},
+	CreatedAt:   whereHelpertime_Time{field: "\"episodes\".\"created_at\""},
+	UpdatedAt:   whereHelpertime_Time{field: "\"episodes\".\"updated_at\""},
 }
 
 // EpisodeRels is where relationship names are stored.
@@ -215,8 +229,8 @@ func (r *episodeR) GetTurns() TurnSlice {
 type episodeL struct{}
 
 var (
-	episodeAllColumns            = []string{"id", "podcast_id", "number", "name", "aired_at", "patreon_only"}
-	episodeColumnsWithoutDefault = []string{"id", "podcast_id", "aired_at"}
+	episodeAllColumns            = []string{"id", "podcast_id", "number", "name", "aired_at", "patreon_only", "created_at", "updated_at"}
+	episodeColumnsWithoutDefault = []string{"id", "podcast_id", "aired_at", "created_at", "updated_at"}
 	episodeColumnsWithDefault    = []string{"number", "name", "patreon_only"}
 	episodePrimaryKeyColumns     = []string{"id"}
 	episodeGeneratedColumns      = []string{}
@@ -908,6 +922,16 @@ func (o *Episode) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
+		}
+	}
 
 	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
 		return err
@@ -983,6 +1007,12 @@ func (o *Episode) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
 func (o *Episode) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		o.UpdatedAt = currTime
+	}
+
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
@@ -1112,6 +1142,14 @@ func (o EpisodeSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 func (o *Episode) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("datasource_raw: no episodes provided for upsert")
+	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {

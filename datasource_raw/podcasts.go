@@ -24,37 +24,51 @@ import (
 
 // Podcast is an object representing the database table.
 type Podcast struct {
-	ID   string      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Name null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
+	ID        string      `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Name      null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
+	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *podcastR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L podcastL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var PodcastColumns = struct {
-	ID   string
-	Name string
+	ID        string
+	Name      string
+	CreatedAt string
+	UpdatedAt string
 }{
-	ID:   "id",
-	Name: "name",
+	ID:        "id",
+	Name:      "name",
+	CreatedAt: "created_at",
+	UpdatedAt: "updated_at",
 }
 
 var PodcastTableColumns = struct {
-	ID   string
-	Name string
+	ID        string
+	Name      string
+	CreatedAt string
+	UpdatedAt string
 }{
-	ID:   "podcasts.id",
-	Name: "podcasts.name",
+	ID:        "podcasts.id",
+	Name:      "podcasts.name",
+	CreatedAt: "podcasts.created_at",
+	UpdatedAt: "podcasts.updated_at",
 }
 
 // Generated where
 
 var PodcastWhere = struct {
-	ID   whereHelperstring
-	Name whereHelpernull_String
+	ID        whereHelperstring
+	Name      whereHelpernull_String
+	CreatedAt whereHelpertime_Time
+	UpdatedAt whereHelpertime_Time
 }{
-	ID:   whereHelperstring{field: "\"podcasts\".\"id\""},
-	Name: whereHelpernull_String{field: "\"podcasts\".\"name\""},
+	ID:        whereHelperstring{field: "\"podcasts\".\"id\""},
+	Name:      whereHelpernull_String{field: "\"podcasts\".\"name\""},
+	CreatedAt: whereHelpertime_Time{field: "\"podcasts\".\"created_at\""},
+	UpdatedAt: whereHelpertime_Time{field: "\"podcasts\".\"updated_at\""},
 }
 
 // PodcastRels is where relationship names are stored.
@@ -85,8 +99,8 @@ func (r *podcastR) GetEpisodes() EpisodeSlice {
 type podcastL struct{}
 
 var (
-	podcastAllColumns            = []string{"id", "name"}
-	podcastColumnsWithoutDefault = []string{"id"}
+	podcastAllColumns            = []string{"id", "name", "created_at", "updated_at"}
+	podcastColumnsWithoutDefault = []string{"id", "created_at", "updated_at"}
 	podcastColumnsWithDefault    = []string{"name"}
 	podcastPrimaryKeyColumns     = []string{"id"}
 	podcastGeneratedColumns      = []string{}
@@ -600,6 +614,16 @@ func (o *Podcast) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
+		}
+	}
 
 	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
 		return err
@@ -675,6 +699,12 @@ func (o *Podcast) Insert(ctx context.Context, exec boil.ContextExecutor, columns
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
 func (o *Podcast) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		o.UpdatedAt = currTime
+	}
+
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
@@ -804,6 +834,14 @@ func (o PodcastSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, 
 func (o *Podcast) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("datasource_raw: no podcasts provided for upsert")
+	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
