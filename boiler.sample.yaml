@@ -1,5 +1,10 @@
-sqlite3:
-  dbname: tmp/development.db
+psql:
+  host: 127.0.0.1
+  port: 15432
+  sslmode: disable
+  dbname: becauseLanguage
+  user: becauseLanguage
+  pass: Vaew3hahf5she8ph
   blacklist:
     - schema_migrations
   pkgname: datasource_raw

@@ -11,7 +11,11 @@ type DiscordConfig struct {
 }
 
 type DatabaseConfig struct {
-	Path string
+	Hostname string
+	Port     uint
+	Username string
+	Password string
+	Database string
 }
 
 type TranscriptConfig struct {
