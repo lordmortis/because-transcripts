@@ -14,13 +14,15 @@ import (
 )
 
 var (
+	groupSpeakerRegex       *regexp.Regexp
 	spokenLineRegex         *regexp.Regexp
 	paralinguisticLineRegex *regexp.Regexp
 )
 
 func init() {
-	spokenLineRegex = regexp.MustCompile(`^(([A-Za-z\s]*):)(.*)$`)
-	paralinguisticLineRegex = regexp.MustCompile(`^\[.*]$`)
+	groupSpeakerRegex = regexp.MustCompile(`[Aa][Nn][Dd]`)
+	spokenLineRegex = regexp.MustCompile(`^(([A-Za-z]*\s?[A-Za-z]*\s?[A-Za-z]*\s?):)(.*)$`)
+	paralinguisticLineRegex = regexp.MustCompile(`^\[.*]\s$`)
 }
 
 func doImport(filePath string, source *datasource.DataSource) error {
@@ -31,8 +33,6 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	if err != nil {
 		return errors.Because(err, nil, "could not import file")
 	}
-
-	fmt.Printf("Importing %s\n", filePath)
 
 	podcast, err := source.PodcastNamed(ctx, "Because Language")
 	if err != nil {
@@ -79,9 +79,8 @@ func doImport(filePath string, source *datasource.DataSource) error {
 	sequenceNo := 0
 
 	groupUtterances := make([]*datasource.Utterance, 0)
-	var currentSpeaker *datasource.Speaker
+	currentSpeakers := make([]*datasource.Speaker, 0, 1)
 	currentSpeakerAll := false
-	currentSpeaker = nil
 
 	for scanner.Scan() {
 		line := scanner.Text()
@@ -120,6 +119,7 @@ func doImport(filePath string, source *datasource.DataSource) error {
 			lineIndex++
 			continue
 		} else if spokenLineRegex.MatchString(line) {
+			currentSpeakers = currentSpeakers[:0]
 			matches := spokenLineRegex.FindAllStringSubmatch(line, -1)
 			if len(matches) != 1 || len(matches[0]) != 4 {
 				return errors.New(fmt.Sprintf("could not parse %s:%d", filePath, lineIndex))
@@ -133,33 +133,46 @@ func doImport(filePath string, source *datasource.DataSource) error {
 			transcriptName := matches[0][2]
 			if strings.EqualFold(transcriptName, "all") {
 				groupUtterances = append(groupUtterances, utterances...)
-				currentSpeaker = nil
 				currentSpeakerAll = true
 			} else {
-				currentSpeaker, err = source.SpeakerWithTranscriptName(ctx, transcriptName)
-				if err != nil {
-					errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
-					return errors.Because(err, nil, errorString)
+				currentSpeakerAll = false
+				speakerStrings := []string{transcriptName}
+				if groupSpeakerRegex.MatchString(transcriptName) {
+					speakerMatches := groupSpeakerRegex.FindAllStringIndex(transcriptName, -1)
+					speakerStrings = []string{strings.TrimSpace(transcriptName[0:speakerMatches[0][0]])}
+					speakerStrings = append(speakerStrings, strings.TrimSpace(transcriptName[speakerMatches[0][1]+1:]))
 				}
 
-				if currentSpeaker == nil {
-					currentSpeaker = source.NewSpeaker()
-					currentSpeaker.TranscriptName = transcriptName
-					currentSpeaker.Name = transcriptName
-					_, err := currentSpeaker.Update(ctx)
+				for len(speakerStrings) > 0 {
+					transcriptName = speakerStrings[0]
+					speakerStrings = speakerStrings[1:]
+					currentSpeaker, err := source.SpeakerWithTranscriptName(ctx, transcriptName)
 					if err != nil {
-						errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
+						errorString := fmt.Sprintf("could not find speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
 						return errors.Because(err, nil, errorString)
 					}
+
+					if currentSpeaker == nil {
+						currentSpeaker = source.NewSpeaker()
+						currentSpeaker.TranscriptName = transcriptName
+						currentSpeaker.Name = transcriptName
+						_, err := currentSpeaker.Update(ctx)
+						if err != nil {
+							errorString := fmt.Sprintf("could not create speaker %s for line %d from file '%s'", transcriptName, lineIndex, filePath)
+							return errors.Because(err, nil, errorString)
+						}
+					}
+					currentSpeakers = append(currentSpeakers, currentSpeaker)
 				}
+
 			}
 		} else {
 			utterances, err = handleSpokenLine(turn, line)
 		}
 
 		for _, utterance := range utterances {
-			if !currentSpeakerAll && currentSpeaker != nil {
-				utterance.Speakers = []*datasource.Speaker{currentSpeaker}
+			if !currentSpeakerAll && len(currentSpeakers) > 0 {
+				utterance.Speakers = currentSpeakers
 			} else {
 				utterance.Speakers = []*datasource.Speaker{}
 			}

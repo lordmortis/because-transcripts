@@ -18,7 +18,7 @@ func handleParalinguistic(turn *datasource.Turn, sequenceNo int, rawValue string
 	utterance := turn.NewUtterance()
 	utterance.SequenceNo = sequenceNo
 	utterance.IsParalinguistic = true
-	runeValue := []rune(rawValue)
+	runeValue := []rune(strings.TrimSpace(rawValue))
 	utterance.Utterance = string(runeValue[1 : len(runeValue)-1])
 	return utterance
 }

@@ -63,7 +63,9 @@ func (source *DataSource) SpeakerWithId(ctx context.Context, id uuid.UUID) (*Spe
 
 func (source *DataSource) SpeakerWithTranscriptName(ctx context.Context, transcriptName string) (*Speaker, error) {
 	var query []qm.QueryMod
-	query = append(query, qm.WhereIn("transcript_name = ?", transcriptName))
+
+	//goland:noinspection ALL
+	query = append(query, qm.WhereIn("transcript_name ilike ?", transcriptName))
 
 	dbModel, err := datasource_raw.Speakers(query...).One(ctx, source.connection)
 	if err != nil {
