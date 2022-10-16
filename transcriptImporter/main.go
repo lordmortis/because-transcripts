@@ -3,9 +3,7 @@ package transcriptImporter
 import (
 	"BecauseLanguageBot/datasource"
 	"fmt"
-	"github.com/alphadose/zenq/v2"
 	"os"
-	"sync"
 	"time"
 
 	"github.com/fsnotify/fsnotify"
@@ -20,6 +18,7 @@ type Importer struct {
 	watcher        *fsnotify.Watcher
 	watchedEntries map[string]fileInfo
 	datasource     *datasource.DataSource
+	workQueue      chan string
 }
 
 func Init(config config.ImporterConfig, dataSource *datasource.DataSource) (*Importer, error) {
@@ -49,26 +48,29 @@ func Init(config config.ImporterConfig, dataSource *datasource.DataSource) (*Imp
 	}, nil
 }
 
-func initialImportRoutine(dataSource *datasource.DataSource, filePath string, wg *sync.WaitGroup, errorQueue *zenq.ZenQ[error]) {
-	defer wg.Done()
-	var errorString string
-	err := doImport(filePath, dataSource)
-	if err != nil {
-		errorString = fmt.Sprintf("could not import '%s'", filePath)
-	} else {
+func (importer *Importer) ImportWorker() {
+	for {
+		filePath := <-importer.workQueue
+		startTime := time.Now()
+		fmt.Printf("Importing '%s\n", filePath)
+		err := doImport(filePath, importer.datasource)
+		if err != nil {
+			fmt.Printf("could not import '%s': %s\n", filePath, err)
+			continue
+		}
+
 		err = os.Remove(filePath)
 		if err != nil {
-			errorString = fmt.Sprintf("could not remove file '%s'", filePath)
+			fmt.Printf("could not remove file '%s': %s\n", filePath, err)
 		}
+		endTime := time.Now()
+		length := endTime.Sub(startTime)
+		fmt.Printf("Imported '%s' in %fs", filePath, length.Seconds())
 	}
+}
 
-	if errorQueue.IsClosed() {
-		return
-	}
-
-	if err != nil {
-		errorQueue.Write(errors.Because(err, nil, errorString))
-	}
+func (importer *Importer) AddToQueue(filename string) {
+	importer.workQueue <- fmt.Sprintf("%s%c%s", importer.directory, os.PathSeparator, filename)
 }
 
 func (importer *Importer) Start() error {
@@ -80,27 +82,12 @@ func (importer *Importer) Start() error {
 		return errors.Because(nil, err, errorString)
 	}
 
-	var wg sync.WaitGroup
-	errorQueue := zenq.New[error](uint32(len(importDirEntries)))
-	errorQueue.Write(nil) //This is to ensure the queue doesn't block on line 86
+	importer.workQueue = make(chan string)
+
+	go importer.ImportWorker()
+
 	for _, file := range importDirEntries {
-		wg.Add(1)
-		filePath := fmt.Sprintf("%s%c%s", importer.directory, os.PathSeparator, file.Name())
-		go initialImportRoutine(importer.datasource, filePath, &wg, errorQueue)
-	}
-
-	wg.Wait()
-	errorQueue.CloseAsync()
-
-	for {
-		data, queueOpen := errorQueue.Read()
-		if !queueOpen {
-			break
-		}
-		if data == nil {
-			continue
-		}
-		return data
+		go importer.AddToQueue(file.Name())
 	}
 
 	importer.watcher, err = fsnotify.NewWatcher()
