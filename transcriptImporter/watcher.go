@@ -59,17 +59,8 @@ func watchEntry(importer *Importer, name string) {
 		}
 
 		if entry.stabilizedTime.Before(time.Now()) {
-			err := doImport(name, importer.datasource)
-			if err != nil {
-				_, _ = os.Stderr.WriteString(fmt.Sprintf("Could not import file error: %s", err))
-			} else {
-				delete(importer.watchedEntries, entry.name)
-				err := os.Remove(name)
-				if err != nil {
-					_, _ = os.Stderr.WriteString(fmt.Sprintf("Could not remove file after import error: %s", err))
-				}
-			}
-			break
+			importer.workQueue <- name
+			delete(importer.watchedEntries, entry.name)
 		}
 	}
 }

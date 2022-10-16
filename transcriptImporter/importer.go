@@ -34,8 +34,6 @@ func doImport(filePath string, source *datasource.DataSource) error {
 		return errors.Because(err, nil, "could not import file")
 	}
 
-	fmt.Printf("Importing %s\n", filePath)
-
 	podcast, err := source.PodcastNamed(ctx, "Because Language")
 	if err != nil {
 		return errors.Because(err, nil, "could not find postcast name")

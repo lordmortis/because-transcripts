@@ -65,12 +65,8 @@ func (importer *Importer) ImportWorker() {
 		}
 		endTime := time.Now()
 		length := endTime.Sub(startTime)
-		fmt.Printf("Imported '%s' in %fs", filePath, length.Seconds())
+		fmt.Printf("Imported '%s' in %fs\n", filePath, length.Seconds())
 	}
-}
-
-func (importer *Importer) AddToQueue(filename string) {
-	importer.workQueue <- fmt.Sprintf("%s%c%s", importer.directory, os.PathSeparator, filename)
 }
 
 func (importer *Importer) Start() error {
@@ -86,8 +82,10 @@ func (importer *Importer) Start() error {
 
 	go importer.ImportWorker()
 
-	for _, file := range importDirEntries {
-		go importer.AddToQueue(file.Name())
+	for _, fileName := range importDirEntries {
+		go func() {
+			importer.workQueue <- fmt.Sprintf("%s%c%s", importer.directory, os.PathSeparator, fileName)
+		}()
 	}
 
 	importer.watcher, err = fsnotify.NewWatcher()
